@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Icon } from '@iconify/react';
 import { Space, Table, Modal, Input, Button } from 'antd';
@@ -21,8 +22,25 @@ const WarehousesList = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 2000);
   };
+
+  const [uopen, usetOpen] = useState(false);
+  const [uloading, usetLoading] =useState(true);
+  const [selectedwarehouse,setselectedwarehouse]=useState(null);
+  const [warehouse, setwarehouse] = useState('');
+
+ 
+
+  const closeUpdateModal = () => {
+    usetOpen(false);
+    setselectedwarehouse(null);
+
+    // Remove the warehouse ID from the URL
+    const newUrl = `${window.location.origin}/warehouseslist`;
+    window.history.pushState({ path: newUrl }, '', newUrl);
+  };
+
 
   const fetchData = async () => {
     try {
@@ -58,6 +76,95 @@ const WarehousesList = () => {
     }
   };
 
+  
+
+
+  const [uwarehouseName, usetWarehouseName] = useState("");
+  const [uprovince, usetProvince] = useState("");
+  const [udistrict, usetDistrict] = useState("");
+  const [uphone, usetPhone] = useState("");
+  const [ucapacity, usetCapacity] = useState("");
+
+//get data forthe update ware house
+const ushowLoading = (id) => {
+  usetOpen(true);
+  usetLoading(true);
+  
+  setselectedwarehouse(id); // Store the selected warehouse ID
+
+  
+  // Fetch the warehouse details based on the selected warehouse ID
+  const fetchWarehouseDetails = async () => {
+    try {
+      const response = (
+        await axios.post(`http://localhost:5000/api/warehouses/getwarehouse/${id}`)
+      ).data;      
+      usetWarehouseName(response.warehouse.warehouseName);
+      usetProvince(response.warehouse.province);
+      usetDistrict(response.warehouse.district);
+      usetPhone(response.warehouse.phone);
+      usetCapacity(response.warehouse.capacity);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      usetLoading(false);
+    }
+  };
+
+  fetchWarehouseDetails();
+};
+
+
+ // Update warehouse function
+async function Updatewarehouse(e) {
+  e.preventDefault();
+
+  const updatewarehouse = {
+    uwarehouseName,
+    udistrict,
+    uprovince,
+    uphone,
+    ucapacity
+  };
+
+  try {
+   
+    const response = (
+      await axios.put(
+        `http://localhost:5000/api/warehouses/updatewarehouse/${selectedwarehouse}`,
+        updatewarehouse
+      )
+    ).data;
+    console.log(response);
+    
+  } catch (error) {
+    
+    console.log(error);
+  }
+}
+
+
+
+
+
+  //delete warehouse
+  const deletewarehouse = async (id) => {
+    try {
+     
+
+      
+        await axios.delete(`http://localhost:5000/api/warehouses/delete/${id}`);
+        alert("Ware house deleted success fully!")
+        window.location.reload();
+       
+      
+    } catch (error) {
+      console.log(error);
+    } finally {
+     
+    }
+  };
+
   const columns = [
     {
       title: 'Name',
@@ -90,10 +197,10 @@ const WarehousesList = () => {
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
-          <button   className="mr-3">
+          <button onClick={() => ushowLoading(record._id)} className="mr-3">
             <Icon icon="grommet-icons:update" className="text-green-500 text-2xl" />
           </button>
-          <button className="mr-3">
+          <button onClick={()=>deletewarehouse(record._id)} className="mr-3">
             <Icon icon="mingcute:delete-line" className="text-red-500 text-2xl" />
           </button>
         </Space>
@@ -192,8 +299,74 @@ const WarehousesList = () => {
           </form>
         </Modal>
 
-        
-
+        {/*warehouse update form */}
+        <Modal
+        title={<p>Update ware house</p>}
+        loading={loading}
+        footer={null}
+        open={uopen}
+        onCancel={closeUpdateModal}
+      >
+         <form onSubmit={Updatewarehouse} className="max-w-md mx-auto">
+            {/* Warehouse Name Input */}
+            <div class="mb-5 mt-5">
+    <label for="email" class="block mb-2 text-sm font-medium text-gray-400 dark:gray-900">Ware house name</label>
+    <input type="text"
+            value={uwarehouseName}
+            onChange={(e) => {
+                usetWarehouseName(e.target.value);
+            }} class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg  block w-full p-2.5 dark:bg-gray-200  dark:placeholder-gray-400   dark:shadow-sm-light"   />
+  </div>
+            {/* Province Select */}
+            <label className="block mb-2 text-sm font-medium text-gray-900">Select Province</label>
+            <select
+              value={province}
+            
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+            >
+              <option value="Province1">Province 1</option>
+              <option value="Province2">Province 2</option>
+              <option value="Province3">Province 3</option>
+            </select>
+            {/* District Select */}
+            <label className="block mb-2 text-sm font-medium text-gray-900 mt-4">Select District</label>
+            <select
+              value={district}
+              
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+            >
+              <option value="DistrictA">District A</option>
+              <option value="DistrictB">District B</option>
+              <option value="DistrictC">District C</option>
+            </select>
+            <div class="mb-5 mt-4">
+    <label for="number" class="block mb-2 text-sm font-medium text-gray-400 dark:gray-900">Phone number</label>
+    <input 
+    type="text"
+            value={uphone}
+            onChange={(e) => {
+                usetPhone(e.target.value);
+            }} class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg  block w-full p-2.5 dark:bg-gray-200  dark:placeholder-gray-400   dark:shadow-sm-light"  />
+  </div>
+  <div class="mb-5 mt-4">
+    <label for="number" class="block mb-2 text-sm font-medium text-gray-400 dark:gray-900">Capasity</label>
+    <input  value={ucapacity}
+            onChange={(e) => {
+                usetCapacity(e.target.value);
+            }} class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg  block w-full p-2.5 dark:bg-gray-200  dark:placeholder-gray-400   dark:shadow-sm-light"  />
+  </div>
+  
+  
+  
+            
+            <button
+              type="submit"
+              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+            >
+              Update
+            </button>
+          </form>
+      </Modal>
 
       </div>
       <Table columns={columns} dataSource={warehouses} className="ml-4 mr-3" />
