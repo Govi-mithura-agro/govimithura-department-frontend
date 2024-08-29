@@ -21,7 +21,7 @@ const WarehousesList = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-    }, 2000);
+    }, 500);
   };
 
   const fetchData = async () => {
@@ -90,7 +90,7 @@ const WarehousesList = () => {
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
-          <button  onClick={showLoading} className="mr-3">
+          <button   className="mr-3">
             <Icon icon="grommet-icons:update" className="text-green-500 text-2xl" />
           </button>
           <button className="mr-3">
