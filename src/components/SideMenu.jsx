@@ -26,7 +26,7 @@ const items = [
     getItem("Warehouses List", "/warehouseslist"),
     getItem("Fertilizer Requests", "/fertilizerrequests"),
   ]),
-  getItem("Employee", "/employee", <Icon icon="clarity:employee-solid" />),
+  getItem("Mangers", "/managers", <Icon icon="clarity:employee-solid" />),
 ];
 
 const rootSubmenuKeys = [

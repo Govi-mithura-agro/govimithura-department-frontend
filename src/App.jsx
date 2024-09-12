@@ -8,6 +8,7 @@ import WarehousesList from "./components/WarehousesList";
 import FertilizerRequests from "./components/FertilizerRequests";
 import AllAppoinemnts from "./components/AllAppoinemnts";
 import DashBoard from "./components/DashBoard";
+import Managers from "./components/Managers";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Routes>
               <Route path="/" element={<DashBoard />} />
               <Route path="/farmers" element={<Farmers />} />
+              <Route path="/managers" element={<Managers />} />
               <Route path="/insights" element={<Insight />} />
               <Route path="/warehouseslist" element={<WarehousesList />} />
               <Route path="/fertilizerrequests" element={<FertilizerRequests />} />
