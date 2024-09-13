@@ -166,7 +166,7 @@ const data = [
 
 function DashBoard() {
   return (
-    <div>
+    <div className='mr-3'>
       {/* Existing sections */}
       <div className="w-[266px] h-[138px] mt-4 ml-4 pl-5 pr-3 py-3 bg-[#379237]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
         <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">All Users</div>
@@ -190,11 +190,11 @@ function DashBoard() {
         <div className="w-[645px] h-[345px] bg-white rounded-[11px] flex flex-col ">
           <div className="w-[272px] h-[74px] mb-4 p-4">
             <div className="w-[200px] h-[22px] text-gray-900 text-xl font-medium font-['DM Sans'] leading-normal">
-              Fertilizers Amount
+              Warehouses
             </div>
            
             <div className="text-[#a3aed0] text-sm font-medium font-['DM Sans'] leading-normal mt-2">
-              Visitors per day
+              All of warking warehouses
             </div>
             <div className="bar_chart">
                         <Fertilizerbarchart  />

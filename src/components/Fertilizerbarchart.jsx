@@ -1,20 +1,30 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
 import Chart from "chart.js/auto";
 
 function Fertilizerbarchart({ chartWidth = 800, chartHeight = 500 }) {
+  const [warehouses, setWarehouses] = useState([]);
+
+  // Fetch warehouse data from the API
+  const fetchData = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/warehouses/getallwarehouse");
+      setWarehouses(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const chartRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const labels = ['Warehouse', 'Warehouse', 'Warehouse', 'Warehouse', 'Warehouse', 'Warehouse', 'Warehouse'];
-  const data = [
-    { day: 'Warehouse', count: 5 },
-    { day: 'Warehouse', count: 10 },
-    { day: 'Warehouse', count: 15 },
-    { day: 'Warehouse', count: 20 },
-    { day: 'Warehouse', count: 25 },
-    { day: 'Warehouse', count: 30 },
-    { day: 'Warehouse', count: 35 },
-  ];
+  // Extract warehouse names (x-axis labels) and capacities (y-axis data)
+  const labels = warehouses.map(warehouse => warehouse.warehouseName);
+  const data = warehouses.map(warehouse => warehouse.capacity);
 
   const createChart = (labels, data) => {
     const ctx = canvasRef.current.getContext("2d");
@@ -27,24 +37,25 @@ function Fertilizerbarchart({ chartWidth = 800, chartHeight = 500 }) {
         labels: labels,
         datasets: [
           {
-            data: data.map((item) => item.count),
+            data: data,
             backgroundColor: " #7ec75b",
             borderColor: "#7ec75b",
             borderRadius: 10,
             borderWidth: 1,
+            barThickness: 40,
           },
         ],
       },
       options: {
-        maintainAspectRatio: false, // Allow custom size by disabling aspect ratio
+        maintainAspectRatio: false,
         scales: {
           x: {
             display: true,
             ticks: {
-              color: "#4A4A4A", // Customize the color of the labels
+              color: "#4A4A4A",
               font: {
-                family: "Arial", // Customize font family
-                size: 14, // Customize font size
+                family: "Arial",
+                size: 14,
               },
             },
           },
@@ -61,10 +72,10 @@ function Fertilizerbarchart({ chartWidth = 800, chartHeight = 500 }) {
         },
         plugins: {
           legend: {
-            display: false, // Hide legend
+            display: false,
           },
           tooltip: {
-            enabled: true, // Enable tooltips
+            enabled: true,
             backgroundColor: "#556b4b",
             titleFont: { size: 14 },
             bodyFont: { size: 12 },
@@ -75,19 +86,21 @@ function Fertilizerbarchart({ chartWidth = 800, chartHeight = 500 }) {
   };
 
   useEffect(() => {
-    createChart(labels, data);
-  }, [labels, data]);
+    if (warehouses.length > 0) {
+      createChart(labels, data);
+    }
+  }, [warehouses]);
 
   return (
     <div
       className="daily-login-count-chart-container flex justify-center"
-      style={{ width: '564px', height: '264px' }} // Use style to pass custom width/height
+      style={{ width: '564px', height: '264px' }}
     >
       <canvas
         ref={canvasRef}
         id="LoginCountChart"
-        width={chartWidth} // Set width attribute
-        height={chartHeight} // Set height attribute
+        width={chartWidth}
+        height={chartHeight}
       ></canvas>
     </div>
   );

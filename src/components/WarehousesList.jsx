@@ -183,7 +183,7 @@ const deletewarehouse = async (id) => {
       render: (_, record) => (
         <Space size="middle" className="flex justify-center">
           <button onClick={() => showUpdateModal(record._id)} className="ml-4">
-            <Icon icon="grommet-icons:update" className="text-green-500 text-2xl" />
+            <Icon icon="mage:edit" className="text-green-500 text-2xl" />
           </button>
           <Popconfirm
     title="Delete the warehouse"
