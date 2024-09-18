@@ -5,7 +5,7 @@ import DashBoard from "./DashBoard";
 import FertilizerRequests from "./FertilizerRequests";
 import Insight from "./Insight";
 import WarehousesList from "./WarehousesList";
-import Employee from "./Employee";
+import Employee from "./Managers";
 
 export {
     SideMenu,
