@@ -240,10 +240,11 @@ function DashBoard() {
     fetchData();
   }, []);
   
-
+  const user = JSON.parse(localStorage.getItem("currentUser"));
 
   return (
     <div className='mr-3'>
+    <h1>{user?.address?.province}</h1>
       {/* Existing sections */}
       <div className="w-[266px] h-[138px] mt-4 ml-4 pl-5 pr-3 py-3 bg-[#379237]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
         <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">All Users</div>
