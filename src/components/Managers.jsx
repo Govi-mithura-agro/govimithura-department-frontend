@@ -1,6 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Input, Upload, Button, Table, Radio, Select, message, Popconfirm, Tag, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UserSwitchOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from "react";
+import {
+  Modal,
+  Input,
+  Upload,
+  Button,
+  Table,
+  Radio,
+  Select,
+  message,
+  Popconfirm,
+  Tag,
+  Tooltip,
+} from "antd";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  UserSwitchOutlined,
+} from "@ant-design/icons";
 import axios from "axios";
 
 const { Search } = Input;
@@ -9,31 +26,31 @@ const { Option } = Select;
 const ManagerManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState('');
+  const [previewImage, setPreviewImage] = useState("");
   const [fileList, setFileList] = useState([]);
-  const [searchKey, setSearchKey] = useState('');
-  const [selectedRole, setSelectedRole] = useState('all');
-  const [selectedProvince, setSelectedProvince] = useState('all');
-  const [selectedDistrict, setSelectedDistrict] = useState('all');
-  const [selectedDivision, setSelectedDivision] = useState('all');
+  const [searchKey, setSearchKey] = useState("");
+  const [selectedRole, setSelectedRole] = useState("all");
+  const [selectedProvince, setSelectedProvince] = useState("all");
+  const [selectedDistrict, setSelectedDistrict] = useState("all");
+  const [selectedDivision, setSelectedDivision] = useState("all");
   const [managerList, setManagerList] = useState([]);
   const [filteredManagerList, setFilteredManagerList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editingManager, setEditingManager] = useState(null);
 
   // Form State
-  const [managerId, setManagerId] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [departmentId, setDepartmentId] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [addressLine, setAddressLine] = useState('');
-  const [province, setProvince] = useState('');
-  const [district, setDistrict] = useState('');
-  const [division, setDivision] = useState('');
-  const [role, setRole] = useState('manager');
-  const [status, setStatus] = useState('active');
+  const [managerId, setManagerId] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [addressLine, setAddressLine] = useState("");
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
+  const [division, setDivision] = useState("");
+  const [role, setRole] = useState("manager");
+  const [status, setStatus] = useState("active");
 
   useEffect(() => {
     fetchManagerList();
@@ -41,12 +58,21 @@ const ManagerManagement = () => {
 
   useEffect(() => {
     filterManagers();
-  }, [searchKey, selectedRole, selectedProvince, selectedDistrict, selectedDivision, managerList]);
+  }, [
+    searchKey,
+    selectedRole,
+    selectedProvince,
+    selectedDistrict,
+    selectedDivision,
+    managerList,
+  ]);
 
   const fetchManagerList = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://localhost:5000/api/managers/getallmanagers");
+      const response = await axios.get(
+        "http://localhost:5000/api/managers/getallmanagers"
+      );
       setManagerList(response.data);
     } catch (error) {
       message.error("Failed to fetch managers");
@@ -58,6 +84,7 @@ const ManagerManagement = () => {
   const filterManagers = () => {
     let tempList = [...managerList];
 
+    // Filter by search key (name, email, or managerId)
     if (searchKey) {
       tempList = tempList.filter(
         (item) =>
@@ -67,20 +94,30 @@ const ManagerManagement = () => {
       );
     }
 
+    // Filter by role (manager/admin)
     if (selectedRole !== "all") {
       tempList = tempList.filter((item) => item.role === selectedRole);
     }
 
+    // Filter by province
     if (selectedProvince !== "all") {
-      tempList = tempList.filter((item) => item.address.province === selectedProvince);
+      tempList = tempList.filter(
+        (item) => item.address.province === selectedProvince
+      );
     }
 
+    // Filter by district
     if (selectedDistrict !== "all") {
-      tempList = tempList.filter((item) => item.address.district === selectedDistrict);
+      tempList = tempList.filter(
+        (item) => item.address.district === selectedDistrict
+      );
     }
 
+    // Filter by division
     if (selectedDivision !== "all") {
-      tempList = tempList.filter((item) => item.address.division === selectedDivision);
+      tempList = tempList.filter(
+        (item) => item.address.division === selectedDivision
+      );
     }
 
     setFilteredManagerList(tempList);
@@ -99,7 +136,7 @@ const ManagerManagement = () => {
       setDistrict(manager.address.district);
       setDivision(manager.address.division);
       setRole(manager.role);
-      setStatus(manager.status || 'active');
+      setStatus(manager.status || "active");
     } else {
       setEditingManager(null);
       resetForm();
@@ -108,18 +145,18 @@ const ManagerManagement = () => {
   };
 
   const resetForm = () => {
-    setManagerId('');
-    setName('');
-    setEmail('');
-    setPassword('');
-    setDepartmentId('');
-    setPhoneNumber('');
-    setAddressLine('');
-    setProvince('');
-    setDistrict('');
-    setDivision('');
-    setRole('manager');
-    setStatus('active');
+    setManagerId("");
+    setName("");
+    setEmail("");
+    setPassword("");
+    setDepartmentId("");
+    setPhoneNumber("");
+    setAddressLine("");
+    setProvince("");
+    setDistrict("");
+    setDivision("");
+    setRole("manager");
+    setStatus("active");
     setFileList([]);
   };
 
@@ -129,11 +166,16 @@ const ManagerManagement = () => {
   };
 
   const handleSave = async () => {
+    // Basic validation for required fields
+    if (!name || !email || !phoneNumber || !addressLine || !province || !district || !division) {
+      return message.error("Please fill all the required fields.");
+    }
+  
+    // Prepare the manager data
     const managerData = {
       managerId,
       name,
       email,
-      password,
       departmentId,
       phoneNumber,
       address: {
@@ -145,25 +187,35 @@ const ManagerManagement = () => {
       role,
       status,
     };
-
+  
+    // Conditionally add the password if it is set
+    if (password) {
+      managerData.password = password;
+    }
+  
     try {
       if (editingManager) {
+        // Editing existing manager
         await axios.post(`http://localhost:5000/api/managers/updatemanager/${editingManager._id}`, managerData);
         message.success("Manager updated successfully");
       } else {
+        // Adding a new manager
         await axios.post("http://localhost:5000/api/managers/addmanagers", managerData);
         message.success("Manager added successfully");
       }
-      handleModalClose();
-      fetchManagerList();
+      handleModalClose(); // Close the modal
+      fetchManagerList(); // Refresh the manager list
     } catch (error) {
       message.error(error.response?.data?.message || "An error occurred");
     }
   };
+  
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/managers/deletemanager/${id}`);
+      await axios.delete(
+        `http://localhost:5000/api/managers/deletemanager/${id}`
+      );
       message.success("Manager deleted successfully");
       fetchManagerList();
     } catch (error) {
@@ -172,21 +224,22 @@ const ManagerManagement = () => {
   };
 
   const handleSuspend = async (id, currentStatus) => {
-    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
     try {
-      await axios.post(`http://localhost:5000/api/managers/updatemanager/${id}`, { status: newStatus });
-      message.success(`Manager ${newStatus === 'active' ? 'activated' : 'suspended'} successfully`);
-      fetchManagerList();
+      // Make the API call to toggle the manager's status
+      const response = await axios.post(`http://localhost:5000/api/managers/togglemanagerstatus/${id}`);
+      message.success(response.data.message);
+      fetchManagerList(); // Refresh the manager list after suspension/activation
     } catch (error) {
-      message.error(`Failed to ${newStatus === 'active' ? 'activate' : 'suspend'} manager`);
+      message.error("Failed to update manager status");
     }
   };
+  
 
   const columns = [
     {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
       render: (text, record) => (
         <Tooltip title={`ID: ${record.managerId}`}>
           <span>{text}</span>
@@ -194,56 +247,59 @@ const ManagerManagement = () => {
       ),
     },
     {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
     },
     {
-      title: 'Department ID',
-      dataIndex: 'departmentId',
-      key: 'departmentId',
+      title: "Department ID",
+      dataIndex: "departmentId",
+      key: "departmentId",
     },
     {
-      title: 'Role',
-      dataIndex: 'role',
-      key: 'role',
+      title: "Role",
+      dataIndex: "role",
+      key: "role",
       render: (text) => (
-        <Tag color={text === 'admin' ? 'gold' : 'geekblue'}>
-          {text ? text.toUpperCase() : 'UNKNOWN'}
+        <Tag color={text === "admin" ? "gold" : "geekblue"}>
+          {text ? text.toUpperCase() : "UNKNOWN"}
         </Tag>
       ),
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
       render: (text) => (
-        <Tag color={text === 'active' ? 'green' : 'red'}>
-          {text ? text.toUpperCase() : 'UNKNOWN'}
+        <Tag color={text === "active" ? "green" : "red"}>
+          {text ? text.toUpperCase() : "UNKNOWN"}
         </Tag>
       ),
     },
     {
-      title: 'Province',
-      dataIndex: ['address', 'province'],
-      key: 'province',
+      title: "Province",
+      dataIndex: ["address", "province"],
+      key: "province",
     },
     {
-      title: 'District',
-      dataIndex: ['address', 'district'],
-      key: 'district',
+      title: "District",
+      dataIndex: ["address", "district"],
+      key: "district",
     },
     {
-      title: 'Division',
-      dataIndex: ['address', 'division'],
-      key: 'division',
+      title: "Division",
+      dataIndex: ["address", "division"],
+      key: "division",
     },
     {
-      title: 'Actions',
-      key: 'actions',
+      title: "Actions",
+      key: "actions",
       render: (_, record) => (
         <div className="space-x-2">
-          <Button icon={<EditOutlined />} onClick={() => handleModalOpen(record)} />
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => handleModalOpen(record)}
+          />
           <Popconfirm
             title="Are you sure you want to delete this manager?"
             onConfirm={() => handleDelete(record._id)}
@@ -253,8 +309,10 @@ const ManagerManagement = () => {
             <Button icon={<DeleteOutlined />} />
           </Popconfirm>
           <Popconfirm
-            title={`Are you sure you want to ${record.status === 'active' ? 'suspend' : 'activate'} this manager?`}
-            onConfirm={() => handleSuspend(record._id, record.status)}
+            title={`Are you sure you want to ${
+              record.status === "active" ? "suspend" : "activate"
+            } this manager?`}
+            onConfirm={() => handleSuspend(record._id)}
             okText="Yes"
             cancelText="No"
           >
@@ -263,17 +321,20 @@ const ManagerManagement = () => {
         </div>
       ),
     },
+
   ];
 
-  const handleFileChange = ({ fileList: newFileList }) => setFileList(newFileList);
-  
+  const handleFileChange = ({ fileList: newFileList }) =>
+    setFileList(newFileList);
+
   const handlePreview = (file) => {
     setPreviewImage(file.url || file.thumbUrl);
     setPreviewOpen(true);
   };
 
   const getUniqueValues = (field) => {
-    return ['all', ...new Set(managerList.map(manager => manager.address[field]))];
+    const uniqueValues = managerList.map((manager) => manager.address[field]);
+    return ["all", ...new Set(uniqueValues.filter(Boolean))]; // 'all' + unique values
   };
 
   return (
@@ -305,8 +366,10 @@ const ManagerManagement = () => {
           onChange={(value) => setSelectedProvince(value)}
           value={selectedProvince}
         >
-          {getUniqueValues('province').map(province => (
-            <Option key={province} value={province}>{province}</Option>
+          {getUniqueValues("province").map((province) => (
+            <Option key={province} value={province}>
+              {province}
+            </Option>
           ))}
         </Select>
 
@@ -316,21 +379,13 @@ const ManagerManagement = () => {
           onChange={(value) => setSelectedDistrict(value)}
           value={selectedDistrict}
         >
-          {getUniqueValues('district').map(district => (
-            <Option key={district} value={district}>{district}</Option>
+          {getUniqueValues("district").map((district) => (
+            <Option key={district} value={district}>
+              {district}
+            </Option>
           ))}
         </Select>
 
-        <Select
-          style={{ width: 200 }}
-          placeholder="Select Division"
-          onChange={(value) => setSelectedDivision(value)}
-          value={selectedDivision}
-        >
-          {getUniqueValues('division').map(division => (
-            <Option key={division} value={division}>{division}</Option>
-          ))}
-        </Select>
       </div>
 
       <Table
@@ -416,7 +471,7 @@ const ManagerManagement = () => {
             <Select
               value={role}
               onChange={(value) => setRole(value)}
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
               className="mb-2"
             >
               <Option value="manager">Manager</Option>
@@ -425,7 +480,7 @@ const ManagerManagement = () => {
             <Select
               value={status}
               onChange={(value) => setStatus(value)}
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
             >
               <Option value="active">Active</Option>
               <Option value="suspended">Suspended</Option>
@@ -438,13 +493,19 @@ const ManagerManagement = () => {
           onPreview={handlePreview}
           onChange={handleFileChange}
         >
-          {fileList.length >= 1 ? null : <div>
-            <PlusOutlined />
-            <div style={{ marginTop: 8 }}>Upload</div>
-          </div>}
+          {fileList.length >= 1 ? null : (
+            <div>
+              <PlusOutlined />
+              <div style={{ marginTop: 8 }}>Upload</div>
+            </div>
+          )}
         </Upload>
-        <Modal open={previewOpen} footer={null} onCancel={() => setPreviewOpen(false)}>
-          <img alt="example" style={{ width: '100%' }} src={previewImage} />
+        <Modal
+          open={previewOpen}
+          footer={null}
+          onCancel={() => setPreviewOpen(false)}
+        >
+          <img alt="example" style={{ width: "100%" }} src={previewImage} />
         </Modal>
       </Modal>
     </div>
