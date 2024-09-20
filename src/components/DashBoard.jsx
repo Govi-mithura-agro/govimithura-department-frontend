@@ -1,9 +1,366 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Table, Avatar, Tag } from 'antd';
+import { Doughnut } from "react-chartjs-2";
+import Fertilizerbarchart from "./Fertilizerbarchart";
 
-function DashBoard() {
-  return (
-    <div>DashBoard</div>
-  )
+
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+} from 'chart.js';
+import { Link } from 'react-router-dom';
+
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
+
+const pieChartData = {
+  labels: ['Label 1', 'Label 2', 'Label 3'],
+  datasets: [
+    {
+      label: "Packages",
+      data: [10, 20, 30],
+      backgroundColor: [
+        "#82cd47",
+        "#379237",
+        "#f0ff42",
+      ],
+      borderWidth: 1,
+    },
+  ],
 }
 
-export default DashBoard
+
+const options = {
+  plugins: {
+    legend: {
+      display: false,
+    },
+  },
+};
+
+// Sample customer data
+const dataSource = [
+  {
+    key: '1',
+    name: 'Neil Sims',
+    email: 'email@example.com',
+    avatar: 'https://via.placeholder.com/32x32',
+    amount: '12500 LKR',
+  },
+  {
+    key: '2',
+    name: 'Jane Doe',
+    email: 'jane@example.com',
+    avatar: 'https://via.placeholder.com/32x32',
+    amount: '9500 LKR',
+  },
+  {
+    key: '3',
+    name: 'John Smith',
+    email: 'john@example.com',
+    avatar: 'https://via.placeholder.com/32x32',
+    amount: '6700 LKR',
+  },
+];
+
+// Table columns
+const columns = [
+  {
+    title: 'Customer',
+    dataIndex: 'name',
+    key: 'name',
+    render: (text, record) => (
+      <div className="flex items-center gap-2">
+        <Avatar src={record.avatar} />
+        <div>
+          <div className="text-base font-semibold">{record.name}</div>
+          <div className="text-xs text-gray-500">{record.email}</div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: 'Quantity (Kg)',
+    dataIndex: 'amount',
+    key: 'amount',
+    align: 'right',
+    render: (amount) => <span className="font-semibold">{amount}</span>,
+  },
+];
+
+const updatecolumns = [
+  {
+    title: 'Fertilizer Name',
+    dataIndex: 'fertilizerName',
+    key: 'fertilizerName',
+    render: (text) => <a>{text}</a>,
+  },
+  {
+    title: 'Wanted Date',
+    dataIndex: 'wantedDate',  // Corrected to 'wantedDate'
+    key: 'wantedDate',
+  },
+  {
+    title: 'Quantity (Kg)',
+    dataIndex: 'quantity',  // Corrected to 'quantity'
+    key: 'quantity',
+  },
+  {
+    title: <div className="text-center">Status</div>,
+    dataIndex: 'status',
+    key: 'status',
+    render: (status) => {
+      let color = '';
+      if (status === "Pending") {
+        color = 'blue';
+      } else if (status === "Approved") {
+        color = 'green';
+      } else if (status === "Disapproved") {
+        color = 'red';
+      }
+      return (
+        <Tag
+          color={color}
+          style={{
+            fontSize: '14px',
+            padding: '4px 10px',
+            width: '100px',
+            textAlign: 'center',
+          }}
+        >
+          {status}
+        </Tag>
+      );
+    },
+  },
+];
+
+const data = [
+  {
+    key: '1',
+    fertilizerName: 'Payment from Bonnie Green',
+    wanteddate: 'New York No. 1 Lake Park',
+    quentity: 15000,
+    tags: ['nice'],
+  },
+  {
+    key: '2',
+    fertilizerName: 'Payment from Bonnie Green',
+   wanteddate: 'New York No. 1 Lake Park',
+    quentity: 15000,
+    tags: ['nice'],
+  },
+  {
+    key: '3',
+    fertilizerName: 'Payment from Bonnie Green',
+    wanteddate: 'New York No. 1 Lake Park',
+    quentity: 15000,
+    tags: ['nice'],
+  },
+];
+
+
+
+function DashBoard() {
+
+  const [warehouseCount, setwarehouseCount] = useState(0); // State to store the farmer count
+  const [farmersCount, setfarmersCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch all farmers to get the count
+    const fetchWarehouseCount = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/warehouses/getallwarehouse'); // Make sure this endpoint matches your backend route
+        setwarehouseCount(response.data.length);  // Set the farmer count
+      } catch (error) {
+        console.error('Error fetching warehouse count:', error);
+      }
+    };
+
+    fetchWarehouseCount();
+
+    const fetchFarmersCount = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/farmers/getAllFarmers'); // Make sure this endpoint matches your backend route
+        setfarmersCount(response.data.length);  // Set the farmer count
+      } catch (error) {
+        console.error('Error fetching farmer count:', error);
+      }
+    };
+  
+    fetchFarmersCount();
+  
+   
+  }, []);
+
+
+  const [farmersStatusCount, setFarmersStatusCount] = useState({ active: 0, unverified: 0 });
+
+  useEffect(() => {
+    const fetchFarmersVerificationData = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/farmers/getAllFarmers'); 
+        const farmers = response.data;
+
+        // Calculate counts for Active and Unverified farmers
+        const activeCount = farmers.filter(farmer => farmer.status === "Active").length;
+        const unverifiedCount = farmers.filter(farmer => farmer.status === "Unverified").length;
+
+        setFarmersStatusCount({ active: activeCount, unverified: unverifiedCount });
+      } catch (error) {
+        console.error('Error fetching farmer verification data:', error);
+      }
+    };
+
+    fetchFarmersVerificationData();
+  }, []);
+   
+  const [fertilizerRequests, setFertilizerRequests] = useState([]);
+  const [filteredRequests, setFilteredRequests] = useState([]);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/fertilizers/getallFertilizerRequest");
+      setFertilizerRequests(response.data);
+      setFilteredRequests(response.data.slice(0, 3)); // Initialize filteredRequests with only the first 5 entries
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+  
+  const user = JSON.parse(localStorage.getItem("currentUser"));
+
+  return (
+    <div className='mr-3'>
+    <h1>{user?.address?.province}</h1>
+      {/* Existing sections */}
+      <div className="w-[266px] h-[138px] mt-4 ml-4 pl-5 pr-3 py-3 bg-[#379237]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+        <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">All Users</div>
+        <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{farmersCount}+</div>
+      </div>
+      <div className="w-[266px] h-[138px] mt-5 ml-14 pl-5 pr-3 py-3 bg-[#54b435]/40 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+        <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">Farmers</div>
+        <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{farmersCount}</div>
+      </div>
+      <div className="w-[266px] h-[138px] mt-5 ml-14 pl-5 pr-3 py-3 bg-[#82cd47]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+        <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">Warehouses</div>
+        <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{warehouseCount}</div>
+      </div>
+      <div className="w-[266px] h-[138px] mt-5 ml-14 pl-5 pr-3 py-3 bg-[#f0ff42]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+        <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">Managers</div>
+        <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">4</div>
+      </div>
+
+      {/* New section */}
+      <div className="flex mt-8 ml-4 space-x-10">
+        <div className="w-[645px] h-[345px] bg-white rounded-[11px] flex flex-col ">
+          <div className="w-[272px] h-[74px] mb-4 p-4">
+            <div className="w-[200px] h-[22px] text-gray-900 text-xl font-medium font-['DM Sans'] leading-normal">
+              Warehouses
+            </div>
+           
+            <div className="text-[#a3aed0] text-sm font-medium font-['DM Sans'] leading-normal mt-2">
+              All of warking warehouses
+            </div>
+            <div className="bar_chart">
+                        <Fertilizerbarchart/>
+                    </div>
+          </div>
+        </div>
+
+        <div className="w-[545px] h-[345px] bg-white rounded-[11px] flex flex-col ">
+          <div className="w-[262px] h-[74px] mb-4 p-4">
+            <div className="booking_dashboard_doughnut_container ">
+              <h4>Farmer verification</h4>
+              <p className='text-gray-400'>All verification farers summary </p>
+              <div className="booking_dashboard_doughnut flex mt-10 ml-10">
+  <Doughnut
+    data={{
+      labels: ['Active', 'Unverified'],
+      datasets: [
+        {
+          label: "Farmers",
+          data: [farmersStatusCount.active, farmersStatusCount.unverified],
+          backgroundColor: [
+            "#82cd47", // Active farmers
+            "#f0ff42", // Unverified farmers
+          ],
+          borderWidth: 1,
+        },
+      ],
+    }}
+    options={options}
+  />
+  <div className="flex flex-col ml-6 mt-10">
+    {['Active', 'Unverified'].map((label, index) => (
+      <div key={index} className="flex items-center mb-2">
+        <div
+          className="legend-color mt-6"
+          style={{
+            backgroundColor: ['#82cd47', '#f0ff42'][index], // Use the same colors from the chart
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            marginRight: '8px',
+          }}
+        ></div>
+        <div className="w-32 mt-5">
+          {label}: {index === 0 ? farmersStatusCount.active : farmersStatusCount.unverified}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-4 ml-5 mt-8 mb-8">
+        {/* Latest Customers */}
+        <div className="w-[380px] h-[437px] p-6 bg-white rounded-[9px] shadow flex-col justify-start items-start gap-4">
+          <div className="self-stretch justify-start items-start gap-2.5 inline-flex">
+            <div className="grow shrink basis-0 text-gray-900 text-xl font-semibold">Latest Customers</div>
+          </div>
+          <Table dataSource={dataSource} columns={columns} pagination={false} />
+        </div>
+
+        {/* Updates section */}
+        <div className="w-[830px] h-[438px] bg-white rounded-[11px] flex flex-col p-4">
+          <div className="mb-4 flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">Fertilizer Request</h1>
+              <p className="text-sm text-gray-500">List of latest fertilizer request.</p>
+            </div>
+            <Link to="/fertilizerrequests">
+  <button className="px-4 py-2 bg-green-700 text-white rounded-lg text-xs font-bold">
+    View All
+  </button>
+</Link>
+
+          </div>
+          <div className="overflow-x-auto">
+          <Table columns={updatecolumns} dataSource={filteredRequests} />
+
+</div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default DashBoard;
