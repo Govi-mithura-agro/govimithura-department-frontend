@@ -46,55 +46,52 @@ const options = {
   },
 };
 
-// Sample customer data
+// Sample farmers data
 const dataSource = [
   {
     key: '1',
-    name: 'Neil Sims',
-    email: 'email@example.com',
-    avatar: 'https://via.placeholder.com/32x32',
-    amount: '12500 LKR',
+    fullname: 'Neil Sims',
+    district: 'email@example.com',
+    profileImage: 'https://via.placeholder.com/32x32',
+   
   },
   {
     key: '2',
-    name: 'Jane Doe',
-    email: 'jane@example.com',
-    avatar: 'https://via.placeholder.com/32x32',
-    amount: '9500 LKR',
+    fullname: 'Jane Doe',
+    district: 'jane@example.com',
+    profileImage: 'https://via.placeholder.com/32x32',
+   
   },
-  {
-    key: '3',
-    name: 'John Smith',
-    email: 'john@example.com',
-    avatar: 'https://via.placeholder.com/32x32',
-    amount: '6700 LKR',
-  },
+  
 ];
 
 // Table columns
-const columns = [
+const farmerColumns = [
   {
-    title: 'Customer',
-    dataIndex: 'name',
-    key: 'name',
+    title: 'Name',
+    dataIndex: 'fullname',
+    key: 'fullname',
     render: (text, record) => (
       <div className="flex items-center gap-2">
-        <Avatar src={record.avatar} />
+        <Avatar src={record.profileImage} />
         <div>
-          <div className="text-base font-semibold">{record.name}</div>
-          <div className="text-xs text-gray-500">{record.email}</div>
+          <div className="text-base font-semibold">{record.fullname}</div>
         </div>
       </div>
     ),
   },
   {
-    title: 'Quantity (Kg)',
-    dataIndex: 'amount',
-    key: 'amount',
-    align: 'right',
-    render: (amount) => <span className="font-semibold">{amount}</span>,
+    title: 'District',
+    dataIndex: 'district',
+    key: 'district',
+    render: (text, record) => (
+      <span className="font-semibold">
+        {record.address && record.address.district ? record.address.district : 'N/A'}
+      </span>
+    ),
   },
 ];
+
 
 const updatecolumns = [
   {
@@ -173,6 +170,7 @@ function DashBoard() {
 
   const [warehouseCount, setwarehouseCount] = useState(0); // State to store the farmer count
   const [farmersCount, setfarmersCount] = useState(0);
+  const [managersCount, setmanagersCount] = useState(0);
 
   useEffect(() => {
     // Fetch all farmers to get the count
@@ -197,6 +195,18 @@ function DashBoard() {
     };
   
     fetchFarmersCount();
+
+    const managersCount = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/managers/getallmanagers'); // Make sure this endpoint matches your backend route
+        setmanagersCount(response.data.length);  // Set the farmer count
+      } catch (error) {
+        console.error('Error fetching farmer count:', error);
+      }
+    };
+  
+    managersCount();
+  
   
    
   }, []);
@@ -211,7 +221,7 @@ function DashBoard() {
         const farmers = response.data;
 
         // Calculate counts for Active and Unverified farmers
-        const activeCount = farmers.filter(farmer => farmer.status === "Active").length;
+        const activeCount = farmers.filter(farmer => farmer.status === "Verified").length;
         const unverifiedCount = farmers.filter(farmer => farmer.status === "Unverified").length;
 
         setFarmersStatusCount({ active: activeCount, unverified: unverifiedCount });
@@ -225,6 +235,8 @@ function DashBoard() {
    
   const [fertilizerRequests, setFertilizerRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
+  const [latesFarmers, setlatesFarmers] = useState([]);
+  const [filterLatesFarmers, setfilterLatesFarmers] = useState([]);
 
   const fetchData = async () => {
     try {
@@ -239,28 +251,46 @@ function DashBoard() {
   useEffect(() => {
     fetchData();
   }, []);
+
+
+//get lates farmesr
+  const fetchFarmerData = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/farmers/getAllFarmers");
+      setlatesFarmers(response.data);
+      setfilterLatesFarmers(response.data.slice(0, 3)); // Initialize filteredRequests with only the first 5 entries
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFarmerData();
+  }, []);
   
   const user = JSON.parse(localStorage.getItem("currentUser"));
 
   return (
-    <div className='mr-3'>
-    <h1>{user?.address?.province}</h1>
+    <div className='mr-3 '>
+   
       {/* Existing sections */}
+      <div className='ml-6'>
       <div className="w-[266px] h-[138px] mt-4 ml-4 pl-5 pr-3 py-3 bg-[#379237]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
         <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">All Users</div>
-        <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{farmersCount}+</div>
+        <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{farmersCount+managersCount}</div>
       </div>
-      <div className="w-[266px] h-[138px] mt-5 ml-14 pl-5 pr-3 py-3 bg-[#54b435]/40 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+      <div className="w-[266px] h-[138px] mt-5 ml-10 pl-5 pr-3 py-3 bg-[#54b435]/40 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
         <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">Farmers</div>
         <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{farmersCount}</div>
       </div>
-      <div className="w-[266px] h-[138px] mt-5 ml-14 pl-5 pr-3 py-3 bg-[#82cd47]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+      <div className="w-[266px] h-[138px] mt-5 ml-10 pl-5 pr-3 py-3 bg-[#82cd47]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
         <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">Warehouses</div>
         <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{warehouseCount}</div>
       </div>
-      <div className="w-[266px] h-[138px] mt-5 ml-14 pl-5 pr-3 py-3 bg-[#f0ff42]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+      <div className="w-[266px] h-[138px] mt-5 ml-10 pl-5 pr-3 py-3 bg-[#f0ff42]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
         <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">Managers</div>
-        <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">4</div>
+        <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{managersCount}</div>
+      </div>
       </div>
 
       {/* New section */}
@@ -304,7 +334,7 @@ function DashBoard() {
     options={options}
   />
   <div className="flex flex-col ml-6 mt-10">
-    {['Active', 'Unverified'].map((label, index) => (
+    {['Varified', 'Unverified'].map((label, index) => (
       <div key={index} className="flex items-center mb-2">
         <div
           className="legend-color mt-6"
@@ -332,10 +362,15 @@ function DashBoard() {
       <div className="flex gap-4 ml-5 mt-8 mb-8">
         {/* Latest Customers */}
         <div className="w-[380px] h-[437px] p-6 bg-white rounded-[9px] shadow flex-col justify-start items-start gap-4">
-          <div className="self-stretch justify-start items-start gap-2.5 inline-flex">
+          <div className="self-stretch justify-start items-start gap-2.5 inline-flex mt-2">
             <div className="grow shrink basis-0 text-gray-900 text-xl font-semibold">Latest Customers</div>
+            <Link to="/farmers">
+  <button className="px-4 py-2 bg-green-700 ml-20 mb-2 text-white rounded-lg text-xs font-bold">
+    View All
+  </button>
+</Link>
           </div>
-          <Table dataSource={dataSource} columns={columns} pagination={false} />
+          <Table dataSource={filterLatesFarmers} columns={farmerColumns} pagination={false} className='mt-2' />
         </div>
 
         {/* Updates section */}
