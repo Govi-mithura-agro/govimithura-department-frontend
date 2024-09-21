@@ -17,13 +17,14 @@ import {
   Avatar,
   Tag,
   Table,
+  Select,
 } from "antd";
-
 
 import axios from "axios";
 // import { set } from "mongoose";
 
 let index = 0;
+const { Option } = Select;
 
 const { Search, TextArea } = Input;
 
@@ -33,7 +34,6 @@ function FarmersList() {
   const [tableModelOpen, setTableModelOpen] = useState(false);
   const [tableModelContent, setTableModelContent] = useState();
   const [isEmployeeLoading, setIsEmployeeLoading] = useState(false);
-
 
   // Add farmer model use states
   const [address, setAddress] = useState("");
@@ -46,9 +46,10 @@ function FarmersList() {
   const [profileImage, setProfileImage] = useState("");
   const [status, setStatus] = useState("");
 
-
   //Edit farmer model use states
-  const [editAddress, setEditAddress] = useState("");
+  const [editAddressLine, setEditAddressLine] = useState("");
+  const [editProvince, setEditProvince] = useState("");
+  const [editDistrict, setEditDistrict] = useState("");
   const [editDob, setEditDob] = useState("");
   const [editFullName, setEditFullName] = useState("");
   const [editIdNumber, setEditIdNumber] = useState("");
@@ -57,8 +58,38 @@ function FarmersList() {
   const [editUsername, setEditUsername] = useState("");
   const [editProfileImage, setEditProfileImage] = useState("");
   const [editStatus, setEditStatus] = useState("");
+  const [addressLine, setAddressLine] = useState("");
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
 
   const [fileListEdit, setFileListEdit] = useState([]);
+
+  const [selectedProvince, setSelectedProvince] = useState("all");
+  const [selectedDistrict, setSelectedDistrict] = useState("all");
+
+  // Sample list of provinces and districts (this could be fetched from an API)
+  const provinces = [
+    "Western",
+    "Central",
+    "Southern",
+    "Northern",
+    "Eastern",
+    "North Western",
+    "North Central",
+    "Uva",
+    "Sabaragamuwa",
+  ];
+  const districts = {
+    Western: ["Colombo", "Gampaha", "Kalutara"],
+    Central: ["Kandy", "Matale", "Nuwara Eliya"],
+    Southern: ["Galle", "Matara", "Hambantota"],
+    Northern: ["Jaffna", "Kilinochchi", "Mannar", "Vavuniya", "Mullaitivu"],
+    Eastern: ["Trincomalee", "Batticaloa", "Ampara"],
+    "North Western": ["Kurunegala", "Puttalam"],
+    "North Central": ["Anuradhapura", "Polonnaruwa"],
+    Uva: ["Badulla", "Monaragala"],
+    Sabaragamuwa: ["Ratnapura", "Kegalle"],
+  };
 
   const customRequestEdit = ({ file, onSuccess, onError }) => {
     const formData = new FormData();
@@ -98,8 +129,11 @@ function FarmersList() {
   const saveEditEmployee = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
+    // Validate the required fields
     if (
-      !editAddress ||
+      !editAddressLine ||
+      !editProvince ||
+      !editDistrict ||
       !editDob ||
       !editFullName ||
       !editIdNumber ||
@@ -111,38 +145,40 @@ function FarmersList() {
       return message.error("Please enter a valid email address");
     }
   
-    if (!editProfileImage || editProfileImage.trim() === "") {
-      setProfileImage("https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Windows_10_Default_Profile_Picture.svg/1200px-Windows_10_Default_Profile_Picture.svg.png");
-    } else {
-      console.log("Profile image already set:", editProfileImage);
-    }
-  
+    // Prepare the data to be sent
     const farmerData = {
-      farmerID: tableModelContent.farmerID, // Ensure you send the correct ID field
-      address: editAddress,
-      dob: editDob, // Make sure dob is the correct type
+      farmerID: tableModelContent.farmerID,
       fullname: editFullName,
       idnumber: editIdNumber,
+      email: editEmail,
       phoneNumber: editPhoneNumber,
       profileImage: editProfileImage,
-      email: editEmail,
+      dob: editDob,
+      address: {
+        addressLine: editAddressLine,
+        province: editProvince,
+        district: editDistrict,
+      },
+      status: editStatus,
     };
   
-    console.log('Sending farmer data:', farmerData);
+    console.log("Sending farmer data:", farmerData);
   
     try {
-      const response = await axios.post("http://localhost:5000/api/farmers/editFarmer", farmerData);
-      console.log('Response:', response.data);
+      const response = await axios.post(
+        "http://localhost:5000/api/farmers/editFarmer",
+        farmerData
+      );
+      console.log("Response:", response.data);
       message.success("Farmer edited successfully");
       setTableModelOpen(false);
       fetchFarmersList();
     } catch (error) {
-      console.error('Error:', error.response?.data?.message || error.message);
+      console.error("Error:", error.response?.data?.message || error.message);
       message.error(error.response?.data?.message || "An error occurred");
     }
   };
   
-
 
   //Employee table
   const columns = [
@@ -171,17 +207,22 @@ function FarmersList() {
       key: "idnumber",
       render: (text) => <a>{text}</a>,
     },
-    
+
     {
-      title: "Address",
-      dataIndex: "address",
-      key: "address",
+      title: "Province",
+      dataIndex: ["address", "province"],
+      key: "province",
+    },
+    {
+      title: "District",
+      dataIndex: ["address", "district"],
+      key: "district",
     },
 
     {
-      title : "phoneNumber",
-      dataIndex : "phoneNumber",
-      key : "phoneNumber"
+      title: "phoneNumber",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
     },
     {
       title: "Status",
@@ -233,7 +274,9 @@ function FarmersList() {
   const showModal = (record) => {
     setTableModelContent(record);
     setTableModelOpen(true);
-    setEditAddress(record.address);
+    setAddressLine(record.address.addressLine);
+    setProvince(record.address.province);
+    setDistrict(record.address.district);
     setEditDob(record.dob);
     setEditFullName(record.fullname);
     setEditIdNumber(record.idnumber);
@@ -261,76 +304,80 @@ function FarmersList() {
       setIsEmployeeLoading(false);
     } catch (error) {
       console.error("Error fetching farmers list:", error);
-      setIsEmployeeLoading(false); 
+      setIsEmployeeLoading(false);
     }
   }
-  
 
   const saveFarmer = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+  
     // Validate required fields
     if (
-      !address ||
-      !dob ||
       !fullName ||
       !idNumber ||
       !email ||
       !phoneNumber ||
-      !username
+      !username ||
+      !addressLine || // Validate address line
+      !province ||    // Validate province
+      !district ||    // Validate district
+      !dob
     ) {
       return message.error("Please fill all the fields");
     } else if (!emailRegex.test(email)) {
       return message.error("Please enter a valid email address");
     }
-
+  
     // Set default profile image if none is provided
     if (!profileImage || profileImage.trim() === "") {
       setProfileImage(
         "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Windows_10_Default_Profile_Picture.svg/1200px-Windows_10_Default_Profile_Picture.svg.png"
       );
-    } else {
-      console.log("Profile image already set:", profileImage);
     }
-
+  
     // Prepare the data to be sent
     const farmerData = {
-      profileImage: profileImage,  // Ensure this field is named correctly
-      idnumber: idNumber,           // Ensure this field is named correctly
-      fullname: fullName,           // Ensure this field is named correctly
+      profileImage: profileImage,
+      idnumber: idNumber,
+      fullname: fullName,
       email,
       phoneNumber,
       username,
-      address,
+      address: {
+        addressLine,  // Make sure addressLine is part of the address object
+        province,     // Include province
+        district,     // Include district
+      },
       dob,
       status: "Unverified",
     };
-
+  
     try {
       // Send a POST request to add a new farmer
       await axios.post("http://localhost:5000/api/farmers/addFarmer", farmerData);
-
+  
       message.success("Farmer added successfully");
       setAddEmployeeModelOpen(false);
       fetchFarmersList();
-
+  
       // Reset form fields
-      setAddress("");
-      setDob(null);
       setFullName("");
       setIdNumber("");
       setEmail("");
       setPhoneNumber("");
       setUsername("");
       setProfileImage("");
+      setAddressLine("");  // Reset address line
+      setProvince("");     // Reset province
+      setDistrict("");     // Reset district
+      setDob(null);
       setFileList([]);
     } catch (error) {
       const errorMessage = error.response?.data?.message || "An error occurred while adding the farmer";
       message.error(errorMessage);
     }
   };
-
-
+  
 
   // Image upload
   const [loading, setLoading] = useState(false);
@@ -452,18 +499,17 @@ function FarmersList() {
   const verifyFarmer = async () => {
     try {
       // Verify the farmer by sending a POST request to the server
-      await axios.post(
-        "http://localhost:5000/api/farmers/verifyFarmer",
-        { farmerID: tableModelContent.farmerID }
-      );
-      
+      await axios.post("http://localhost:5000/api/farmers/verifyFarmer", {
+        farmerID: tableModelContent.farmerID,
+      });
+
       // Display a success message
       message.success("Farmer verified successfully");
-  
+
       // Close any open modals or dialogs
       setTableModelOpen(false);
       setIsVerifyModalOpen(false);
-  
+
       // Fetch the updated list of farmers
       fetchFarmersList();
     } catch (error) {
@@ -472,7 +518,6 @@ function FarmersList() {
       message.error("Failed to verify farmer");
     }
   };
-  
 
   useEffect(() => {
     fetchFarmersList();
@@ -494,22 +539,32 @@ function FarmersList() {
 
   useEffect(() => {
     let tempList = employeeList;
-
+  
+    // Search filtering
     if (searchKey && searchKey !== "") {
-      tempList = tempList.filter(
-        (item) =>
-          item.firstName.toLowerCase().includes(searchKey) ||
-          item.lastName.toLowerCase().includes(searchKey) ||
-          item.empID.toLowerCase().includes(searchKey)
+      tempList = tempList.filter((item) =>
+        item.fullname.toLowerCase().includes(searchKey.toLowerCase())
       );
     }
-
+  
+    // Type filtering (Active/Unverified)
     if (selectedType !== "all") {
       tempList = tempList.filter((item) => item.status === selectedType);
     }
-
+  
+    // Province filtering
+    if (selectedProvince !== "all") {
+      tempList = tempList.filter((item) => item.address.province === selectedProvince);
+    }
+  
+    // District filtering
+    if (selectedDistrict !== "all") {
+      tempList = tempList.filter((item) => item.address.district === selectedDistrict);
+    }
+  
     setFilteredEmployeeList(tempList);
-  }, [searchKey, selectedType, employeeList]);
+  }, [searchKey, selectedType, selectedProvince, selectedDistrict, employeeList]);
+  
 
   return (
     <div className="flex flex-col">
@@ -633,14 +688,45 @@ function FarmersList() {
           </div>
 
           <div class="mt-4 flex flex-col gap-1.5 justify-start items-start rounded-lg border border-gray-300 px-5 py-3.5">
-            <span>Address</span>
-            <TextArea
-              className="w-[520px]"
-              rows={4}
-              value={editAddress}
-              onChange={(e) => setEditAddress(e.target.value)}
-            />
-          </div>
+  <span>Address Line</span>
+  <TextArea
+    className="w-[520px]"
+    rows={2}
+    value={editAddressLine}
+    onChange={(e) => setEditAddressLine(e.target.value)}
+  />
+
+  <span>Province</span>
+  <Select
+    placeholder="Select Province"
+    value={editProvince}
+    onChange={(value) => setEditProvince(value)}
+    style={{ width: "100%", marginBottom: 10 }}
+  >
+    {provinces.map((province) => (
+      <Option key={province} value={province}>
+        {province}
+      </Option>
+    ))}
+  </Select>
+
+  <span>District</span>
+  <Select
+    placeholder="Select District"
+    value={editDistrict}
+    onChange={(value) => setEditDistrict(value)}
+    style={{ width: "100%" }}
+    disabled={editProvince === "all"}
+  >
+    {editProvince !== "all" &&
+      districts[editProvince]?.map((district) => (
+        <Option key={district} value={district}>
+          {district}
+        </Option>
+      ))}
+  </Select>
+</div>
+
           <div>
             {editStatus === "Active" ? (
               <button
@@ -685,30 +771,57 @@ function FarmersList() {
       >
         <div class="flex flex-col justify-start items-center bg-white w-[calc(100%-30px)] mx-4 mb-4 rounded-xl">
           <div class="flex flex-row items-center w-full h-[80px] px-4 rounded-t-xl bg-[#f5f5f5]">
-            <div class="mr-auto flex items-center gap-10">
-              <h1 class="text-xl font-semibold">All Farmers</h1>
-              <Search
-                placeholder="Search"
-                size="large"
-                onSearch={(value) => setSearchKey(value)}
-                className="w-[265px] h-[40px]"
-              />
-            </div>
-            <div class="ml-auto flex items-center">
-              <Radio.Group
-                value={selectedType}
-                onChange={(e) => {
-                  setSelectedType(e.target.value);
-                }}
-                size="large"
-                style={{
-                  width: 250,
-                }}
-              >
-                <Radio.Button value="all">All</Radio.Button>
-                <Radio.Button value="Active">Verified</Radio.Button>
-                <Radio.Button value="Suspended">Unverified</Radio.Button>
-              </Radio.Group>
+            <div class="mr-auto flex  items-center gap-40">
+              <div className="filter-container">
+                {/* Search Input */}
+                <Search
+                  placeholder="Search by name"
+                  onSearch={(value) => setSearchKey(value)}
+                  style={{ width: 200, marginRight: 10 }}
+                />
+
+                {/* Province Dropdown */}
+                <Select
+                  value={selectedProvince}
+                  onChange={(value) => setSelectedProvince(value)}
+                  placeholder="Select Province"
+                  style={{ width: 200, marginRight: 10 }}
+                >
+                  <Option value="all">All Provinces</Option>
+                  {provinces.map((province) => (
+                    <Option key={province} value={province}>
+                      {province}
+                    </Option>
+                  ))}
+                </Select>
+
+                {/* District Dropdown */}
+                <Select
+                  value={selectedDistrict}
+                  onChange={(value) => setSelectedDistrict(value)}
+                  placeholder="Select District"
+                  style={{ width: 200, marginRight: 10 }}
+                  disabled={selectedProvince === "all"}
+                >
+                  <Option value="all">All Districts</Option>
+                  {selectedProvince !== "all" &&
+                    districts[selectedProvince].map((district) => (
+                      <Option key={district} value={district}>
+                        {district}
+                      </Option>
+                    ))}
+                </Select>
+
+                {/* Status Radio Buttons */}
+                <Radio.Group
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                >
+                  <Radio.Button value="all">All</Radio.Button>
+                  <Radio.Button value="Active">Verified</Radio.Button>
+                  <Radio.Button value="Unverified">Unverified</Radio.Button>
+                </Radio.Group>
+              </div>
               <button
                 class=" flex flex-derectiom-col text-white font-medium text-sm bg-[#533c56] rounded-md py-2.5 px-4"
                 onClick={() => setAddEmployeeModelOpen(true)}
@@ -870,13 +983,36 @@ function FarmersList() {
               <div class="mt-4 flex flex-col gap-1.5 justify-start items-start rounded-lg border border-gray-300 p-[10px_20px_15px_20px]">
                 <span>Address</span>
                 <TextArea
-                  style={{
-                    width: 520,
-                  }}
-                  rows={4}
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Address Line"
+                  value={addressLine}
+                  onChange={(e) => setAddressLine(e.target.value)}
+                  style={{ marginBottom: 10 }}
                 />
+                <Select
+                  placeholder="Select Province"
+                  value={province}
+                  onChange={(value) => setProvince(value)}
+                  style={{ width: "100%", marginBottom: 10 }}
+                >
+                  {provinces.map((province) => (
+                    <Option key={province} value={province}>
+                      {province}
+                    </Option>
+                  ))}
+                </Select>
+                <Select
+                  placeholder="Select District"
+                  value={district}
+                  onChange={(value) => setDistrict(value)}
+                  style={{ width: "100%" }}
+                >
+                  {districts[province] &&
+                    districts[province].map((district) => (
+                      <Option key={district} value={district}>
+                        {district}
+                      </Option>
+                    ))}
+                </Select>
               </div>
             </div>
             <div class="flex flex-row justify-between items-center gap-[40px] justify-center items-center">
