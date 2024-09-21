@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Icon } from '@iconify/react';
-import { Table, Space, Input, Button, Tag, } from 'antd';
+import { Table, Space, Input, Button, Tag,message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons'; // Import the search icon
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -130,6 +130,9 @@ function FertilizerRequests() {
       });
       console.log(result.data);
       fetchData();
+      message.success('Approved fertilizer request successfully!').then(() => {
+      window.location.reload();
+    });
     } catch (error) {
       console.log(error);
     }
@@ -142,6 +145,9 @@ function FertilizerRequests() {
       });
       console.log(result.data);
       fetchData();
+      message.success('Disapproved fertilizer request successfully!').then(() => {
+      window.location.reload();
+    });
     } catch (error) {
       console.log(error);
     }

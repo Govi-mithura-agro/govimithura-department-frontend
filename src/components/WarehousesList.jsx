@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Icon } from '@iconify/react';
-import { Space, Table, Modal, Input, Button,Menu,Dropdown } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
+import { Space, Table, Modal, Input, Button,Menu,Dropdown,message,Popconfirm } from 'antd';
+import { DownOutlined  } from '@ant-design/icons';
 
 const { Search } = Input;
 
@@ -20,6 +20,11 @@ const WarehousesList = () => {
   const [uopen, usetOpen] = useState(false);
   const [uloading, usetLoading] = useState(false);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState(null);
+
+  const [filteredWarehouses, setFilteredWarehouses] = useState([]);
+  const [filterProvince, setFilterProvince] = useState("");
+  const [filterDistrict, setFilterDistrict] = useState("");
+  
   const showLoading = () => {
     setOpen(true);
     setLoading(true);
@@ -66,10 +71,16 @@ const WarehousesList = () => {
       phone,
       capacity
     };
+
+    
     try {
       const result = await axios.post("http://localhost:5000/api/warehouses/addwarehouse", warehouse);
       console.log(result.data);
-      window.location.reload();
+
+
+      message.success('ware house added successfully!').then(() => {
+        window.location.reload();
+      });;
     } catch (error) {
       console.log(error);
       setLoading(false);
@@ -115,7 +126,9 @@ const updateWarehouse = async (e) => {
   try {
     const response = await axios.put(`http://localhost:5000/api/warehouses/updatewarehouse/${selectedWarehouseId}`, updateData);
     console.log(response.data);
-    window.location.reload();  // Reload the page to see the updated data
+    message.success('ware house updated successfully!').then(() => {
+      window.location.reload();
+    });;
   } catch (error) {
     console.log(error);
   }
@@ -124,26 +137,16 @@ const updateWarehouse = async (e) => {
 
 
 
-
-
-  //delete warehouse
-  const deletewarehouse = async (id) => {
-    try {
-     
-
-      
-        await axios.delete(`http://localhost:5000/api/warehouses/delete/${id}`);
-       
-        window.location.reload();
-        alert("Ware house deleted success fully!")
-      
-    } catch (error) {
-      console.log(error);
-    } finally {
-     
-    }
-  };
-
+const deletewarehouse = async (id) => {
+  try {
+    await axios.delete(`http://localhost:5000/api/warehouses/delete/${id}`);
+    message.success('Warehouse deleted successfully');
+    window.location.reload();
+  } catch (error) {
+    console.log(error);
+    message.error('Failed to delete warehouse');
+  }
+};
 
   
 
@@ -180,23 +183,25 @@ const updateWarehouse = async (e) => {
       render: (_, record) => (
         <Space size="middle" className="flex justify-center">
           <button onClick={() => showUpdateModal(record._id)} className="ml-4">
-            <Icon icon="grommet-icons:update" className="text-green-500 text-2xl" />
+            <Icon icon="mage:edit" className="text-green-500 text-2xl" />
           </button>
-          <button onClick={() => deletewarehouse(record._id)} className="ml-4">
+          <Popconfirm
+    title="Delete the warehouse"
+    description="Are you sure to delete this warehouse?"
+    okText="Yes"
+    cancelText="No"
+    onConfirm={() => deletewarehouse(record._id)} // Pass the relevant warehouse id
+  >
+   <button className="ml-4">
             <Icon icon="mingcute:delete-line" className="text-red-500 text-2xl" />
           </button>
+  </Popconfirm>
         </Space>
       ),
     },
   ];
   
-  const handleSearch = (event) => {
-    const { value } = event.target;
-    const filtered = warehouses.filter(warehouse =>
-      warehouse.warehouseName.toLowerCase().includes(value.toLowerCase())
-    );
-    setWarehouses(filtered);
-  };
+  
   
  
   const menu = (
@@ -216,28 +221,104 @@ const updateWarehouse = async (e) => {
     </Menu>
   );
 
+
+  <Popconfirm
+    title="Delete the task"
+    description="Are you sure to delete this task?"
+    okText="Yes"
+    cancelText="No"
+  >
+  </Popconfirm>
+
+
+const provinceToDistricts = {
+  "North Central": ["Anuradhapura", "Polonnaruwa"],
+  "NorthWestern": ["Kurunegala", "Puttalam"],
+  "Eastern": ["Ampara", "Batticaloa", "Trincomalee"],
+  "Central": ["Kandy", "Matale", "Nuwara Eliya"],
+  "Uva": ["Badulla", "Monaragala"],
+  "Sabaragamuwa": ["Kegalle", "Ratnapura"],
+  "Southern": ["Galle", "Hambantota", "Matara"]
+};
+
+// Filter Warehouses
+const filterWarehouses = (province, district) => {
+  let filtered = warehouses;
+
+  if (province) {
+    filtered = filtered.filter((warehouse) => warehouse.province === province);
+  }
+
+  if (district) {
+    filtered = filtered.filter((warehouse) => warehouse.district === district);
+  }
+
+  setFilteredWarehouses(filtered);
+};
+
+// Handle province filter change
+const handleProvinceFilterChange = (province) => {
+  setFilterProvince(province);
+  setFilterDistrict(""); // Reset district when province changes
+  filterWarehouses(province, "");
+};
+
+// Handle district filter change
+const handleDistrictFilterChange = (district) => {
+  setFilterDistrict(district);
+  filterWarehouses(filterProvince, district);
+};
+
+const provinces = Object.keys(provinceToDistricts);
+
+const provinceMenu = (
+  <Menu>
+    <Menu.Item key="all" onClick={() => handleProvinceFilterChange("")}>
+      <a href="#">All Provinces</a>
+    </Menu.Item>
+    {provinces.map((province) => (
+      <Menu.Item key={province} onClick={() => handleProvinceFilterChange(province)}>
+        <a href="#">{province}</a>
+      </Menu.Item>
+    ))}
+  </Menu>
+);
+
+const districtMenu = (
+  <Menu>
+    <Menu.Item key="all" onClick={() => handleDistrictFilterChange("")}>
+      <a href="#">All Districts</a>
+    </Menu.Item>
+    {(provinceToDistricts[filterProvince] || []).map((district) => (
+      <Menu.Item key={district} onClick={() => handleDistrictFilterChange(district)}>
+        <a href="#">{district}</a>
+      </Menu.Item>
+    ))}
+  </Menu>
+);
+
   return (
     <>
+
+
       <div className="flex justify-between items-center h-[70px] bg-white rounded-[11px] m-[15px] px-[15px]">
         <h1 className="text-2xl font-semibold font-Poppins">All Warehouses</h1>
         <Input
   placeholder="Search by Name"
-  onChange={handleSearch}
+  
   prefix={<Icon icon="material-symbols:search" className="text-gray-500 text-xl" />} // Add search icon here
   style={{ width: 200 }}
 />
 
 
-
-<Dropdown overlay={menu} trigger={['click']}>
+<Dropdown overlay={provinceMenu} trigger={['click']}>
         <Button>
-         Province <DownOutlined />
+          Province <DownOutlined />
         </Button>
       </Dropdown>
-
-      <Dropdown overlay={menu} trigger={['click']}>
+      <Dropdown overlay={districtMenu} trigger={['click']}>
         <Button>
-         District <DownOutlined />
+          District <DownOutlined />
         </Button>
       </Dropdown>
 
