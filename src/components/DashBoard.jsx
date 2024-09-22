@@ -212,27 +212,29 @@ function DashBoard() {
   }, []);
 
 
-  const [farmersStatusCount, setFarmersStatusCount] = useState({ active: 0, unverified: 0 });
+  const [manegerStatusCount, setManegerStatusCount] = useState({ admin: 0, manage: 0 });
 
-  useEffect(() => {
-    const fetchFarmersVerificationData = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/farmers/getAllFarmers'); 
-        const farmers = response.data;
+  // In the useEffect for fetching manager counts
+const fetchManagerCounts = async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/api/managers/getallmanagers');
+    const manage = response.data;
 
-        // Calculate counts for Active and Unverified farmers
-        const activeCount = farmers.filter(farmer => farmer.status === "Verified").length;
-        const unverifiedCount = farmers.filter(farmer => farmer.status === "Unverified").length;
+    // Calculate counts for Active and Unverified farmers
+    const adminCount = manage.filter(manager => manager.role === "admin").length;
+    const managerCount = manage.filter(manager => manager.role === "manager").length;
 
-        setFarmersStatusCount({ active: activeCount, unverified: unverifiedCount });
-      } catch (error) {
-        console.error('Error fetching farmer verification data:', error);
-      }
-    };
+    setManegerStatusCount({ admin: adminCount, manage: managerCount });
+  } catch (error) {
+    console.error('Error fetching manager counts:', error);
+  }
+};
 
-    fetchFarmersVerificationData();
-  }, []);
-   
+useEffect(() => {
+  fetchManagerCounts();
+}, []);
+
+
   const [fertilizerRequests, setFertilizerRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [latesFarmers, setlatesFarmers] = useState([]);
@@ -313,28 +315,29 @@ function DashBoard() {
         <div className="w-[545px] h-[345px] bg-white rounded-[11px] flex flex-col ">
           <div className="w-[262px] h-[74px] mb-4 p-4">
             <div className="booking_dashboard_doughnut_container ">
-              <h4>Farmer verification</h4>
-              <p className='text-gray-400'>All verification farers summary </p>
+              <h4>Managers</h4>
+              <p className='text-gray-400'>All managers and admins </p>
               <div className="booking_dashboard_doughnut flex mt-10 ml-10">
-  <Doughnut
-    data={{
-      labels: ['Active', 'Unverified'],
-      datasets: [
-        {
-          label: "Farmers",
-          data: [farmersStatusCount.active, farmersStatusCount.unverified],
-          backgroundColor: [
-            "#82cd47", // Active farmers
-            "#f0ff42", // Unverified farmers
-          ],
-          borderWidth: 1,
-        },
-      ],
-    }}
-    options={options}
-  />
-  <div className="flex flex-col ml-6 mt-10">
-    {['Varified', 'Unverified'].map((label, index) => (
+              <Doughnut
+  data={{
+    labels: ['Admin', 'Manager'],
+    datasets: [
+      {
+        label: "Managers",
+        data: [manegerStatusCount.admin, manegerStatusCount.manage],
+        backgroundColor: [
+          "#82cd47", // Admin color
+          "#f0ff42", // Manager color
+        ],
+        borderWidth: 1,
+      },
+    ],
+  }}
+  options={options}
+/>
+
+<div className="flex flex-col ml-6 mt-10">
+    {['Admin', 'Managers'].map((label, index) => (
       <div key={index} className="flex items-center mb-2">
         <div
           className="legend-color mt-6"
@@ -347,7 +350,7 @@ function DashBoard() {
           }}
         ></div>
         <div className="w-32 mt-5">
-          {label}: {index === 0 ? farmersStatusCount.active : farmersStatusCount.unverified}
+          {label}: {index === 0 ? manegerStatusCount.admin : manegerStatusCount.manage}
         </div>
       </div>
     ))}

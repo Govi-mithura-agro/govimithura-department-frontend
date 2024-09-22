@@ -376,18 +376,18 @@ const districtMenu = (
               <option value="Anuradhapura">Anuradhapura</option>
               <option value="Colombo">Colombo</option>
               <option value="Galle">Galle</option>
-              <option value="Gampaha">	Gampaha</option>
+              <option value="Gampaha">Gampaha</option>
               <option value="Hambantota">Hambantota</option>
               <option value="Jaffna">	Jaffna</option>
-              <option value="	Kalutara">	Kalutara</option>
-              <option value="	Kandy">		Kandy</option>
-              <option value="	Kalutara">	Kalutara</option>
-              <option value="	Kegalle">	Kegalle</option>
+              <option value="	Kalutara">Kalutara</option>
+              <option value="	Kandy">Kandy</option>
+              <option value="	Kalutara">Kalutara</option>
+              <option value="	Kegalle">Kegalle</option>
               <option value="	Kilinochchi">Kilinochchi</option>
-              <option value="	Kurunegala">	Kurunegala</option>
-              <option value="	Mannar">	Mannar</option>
-              <option value="	Matale">	Matale</option>
-              <option value="	Matara">	Matara</option>
+              <option value="	Kurunegala">Kurunegala</option>
+              <option value="	Mannar">Mannar</option>
+              <option value="	Matale">Matale</option>
+              <option value="	Matara">Matara</option>
               
             </select>
             {/* Phone Number Input */}
