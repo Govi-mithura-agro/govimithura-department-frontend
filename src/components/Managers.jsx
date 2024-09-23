@@ -11,17 +11,32 @@ import {
   Popconfirm,
   Tag,
   Tooltip,
+  Typography,
+  Layout,
+  Card,
+  Space,
+  Row,
+  Col,
+  Statistic,
+  Divider
 } from "antd";
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
   UserSwitchOutlined,
+  SearchOutlined,
+  TeamOutlined,
+  SolutionOutlined,
+  UserOutlined,
+  UserAddOutlined
 } from "@ant-design/icons";
 import axios from "axios";
 
 const { Search } = Input;
 const { Option } = Select;
+const { Title } = Typography;
+const { Header, Content } = Layout;
 
 const ManagerManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,6 +66,10 @@ const ManagerManagement = () => {
   const [division, setDivision] = useState("");
   const [role, setRole] = useState("manager");
   const [status, setStatus] = useState("active");
+
+  const totalManagers = filteredManagerList.length;
+  const activeManagers = filteredManagerList.filter(m => m.status === "active").length;
+  const suspendedManagers = totalManagers - activeManagers;
 
   useEffect(() => {
     fetchManagerList();
@@ -84,7 +103,6 @@ const ManagerManagement = () => {
   const filterManagers = () => {
     let tempList = [...managerList];
 
-    // Filter by search key (name, email, or managerId)
     if (searchKey) {
       tempList = tempList.filter(
         (item) =>
@@ -94,26 +112,22 @@ const ManagerManagement = () => {
       );
     }
 
-    // Filter by role (manager/admin)
     if (selectedRole !== "all") {
       tempList = tempList.filter((item) => item.role === selectedRole);
     }
 
-    // Filter by province
     if (selectedProvince !== "all") {
       tempList = tempList.filter(
         (item) => item.address.province === selectedProvince
       );
     }
 
-    // Filter by district
     if (selectedDistrict !== "all") {
       tempList = tempList.filter(
         (item) => item.address.district === selectedDistrict
       );
     }
 
-    // Filter by division
     if (selectedDivision !== "all") {
       tempList = tempList.filter(
         (item) => item.address.division === selectedDivision
@@ -166,12 +180,10 @@ const ManagerManagement = () => {
   };
 
   const handleSave = async () => {
-    // Basic validation for required fields
     if (!name || !email || !phoneNumber || !addressLine || !province || !district || !division) {
       return message.error("Please fill all the required fields.");
     }
   
-    // Prepare the manager data
     const managerData = {
       managerId,
       name,
@@ -188,28 +200,24 @@ const ManagerManagement = () => {
       status,
     };
   
-    // Conditionally add the password if it is set
     if (password) {
       managerData.password = password;
     }
   
     try {
       if (editingManager) {
-        // Editing existing manager
         await axios.post(`http://localhost:5000/api/managers/updatemanager/${editingManager._id}`, managerData);
         message.success("Manager updated successfully");
       } else {
-        // Adding a new manager
         await axios.post("http://localhost:5000/api/managers/addmanagers", managerData);
         message.success("Manager added successfully");
       }
-      handleModalClose(); // Close the modal
-      fetchManagerList(); // Refresh the manager list
+      handleModalClose();
+      fetchManagerList();
     } catch (error) {
       message.error(error.response?.data?.message || "An error occurred");
     }
   };
-  
 
   const handleDelete = async (id) => {
     try {
@@ -223,17 +231,35 @@ const ManagerManagement = () => {
     }
   };
 
-  const handleSuspend = async (id, currentStatus) => {
+  const handleSuspend = async (id) => {
     try {
-      // Make the API call to toggle the manager's status
       const response = await axios.post(`http://localhost:5000/api/managers/togglemanagerstatus/${id}`);
       message.success(response.data.message);
-      fetchManagerList(); // Refresh the manager list after suspension/activation
+      fetchManagerList();
     } catch (error) {
       message.error("Failed to update manager status");
     }
   };
-  
+
+  const StyledButton = ({ children, ...props }) => (
+    <Button {...props} style={{ backgroundColor: "#0C6C41", borderColor: "#0C6C41", color: "white" }}>
+      {children}
+    </Button>
+  );
+
+  const StyledCard = ({ children, ...props }) => (
+    <Card
+      {...props}
+      style={{
+        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+        borderRadius: "8px",
+        border: "none",
+        marginBottom: "20px"
+      }}
+    >
+      {children}
+    </Card>
+  );
 
   const columns = [
     {
@@ -295,37 +321,40 @@ const ManagerManagement = () => {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <div className="space-x-2">
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => handleModalOpen(record)}
-          />
-          <Popconfirm
-            title="Are you sure you want to delete this manager?"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button icon={<DeleteOutlined />} />
-          </Popconfirm>
-          <Popconfirm
-            title={`Are you sure you want to ${
-              record.status === "active" ? "suspend" : "activate"
-            } this manager?`}
-            onConfirm={() => handleSuspend(record._id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button icon={<UserSwitchOutlined />} />
-          </Popconfirm>
-        </div>
+        <Space>
+          <Tooltip title="Edit">
+            <StyledButton icon={<EditOutlined />} onClick={() => handleModalOpen(record)} />
+          </Tooltip>
+          <Tooltip title="Delete">
+            <Popconfirm
+              title="Are you sure you want to delete this manager?"
+              onConfirm={() => handleDelete(record._id)}
+              okText="Yes"
+              cancelText="No"
+              okButtonProps={{ style: { backgroundColor: "#0C6C41", borderColor: "#0C6C41" } }}
+            >
+              <StyledButton icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Tooltip>
+          <Tooltip title={record.status === "active" ? "Suspend" : "Activate"}>
+            <Popconfirm
+              title={`Are you sure you want to ${
+                record.status === "active" ? "suspend" : "activate"
+              } this manager?`}
+              onConfirm={() => handleSuspend(record._id)}
+              okText="Yes"
+              cancelText="No"
+              okButtonProps={{ style: { backgroundColor: "#0C6C41", borderColor: "#0C6C41" } }}
+            >
+              <StyledButton icon={<UserSwitchOutlined />} />
+            </Popconfirm>
+          </Tooltip>
+        </Space>
       ),
     },
-
   ];
 
-  const handleFileChange = ({ fileList: newFileList }) =>
-    setFileList(newFileList);
+  const handleFileChange = ({ fileList: newFileList }) => setFileList(newFileList);
 
   const handlePreview = (file) => {
     setPreviewImage(file.url || file.thumbUrl);
@@ -334,66 +363,136 @@ const ManagerManagement = () => {
 
   const getUniqueValues = (field) => {
     const uniqueValues = managerList.map((manager) => manager.address[field]);
-    return ["all", ...new Set(uniqueValues.filter(Boolean))]; // 'all' + unique values
+    return ["all", ...new Set(uniqueValues.filter(Boolean))];
   };
 
   return (
-    <div className="p-5">
-      <div className="flex justify-between items-center mb-5">
-        <Search
-          placeholder="Search by name, email, or ID"
-          onSearch={(value) => setSearchKey(value)}
-          style={{ width: 300 }}
-        />
-        <Button type="primary" onClick={() => handleModalOpen()}>
-          Add Manager
-        </Button>
-      </div>
+    <Layout style={{ minHeight: "100vh" }}>
+      <Header style={{ backgroundColor: "#0C6C41", padding: "0 20px" }}>
+        <Title level={3} style={{ color: "white", margin: "16px 0" }}>
+          <TeamOutlined /> Manager Management
+        </Title>
+      </Header>
+      <div style={{ padding: "20px" }}>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={8}>
+          <Card hoverable>
+            <Statistic
+              title="Total Managers"
+              value={totalManagers}
+              prefix={<TeamOutlined />}
+              valueStyle={{ color: "#0C6C41" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card hoverable>
+            <Statistic
+              title="Active Managers"
+              value={activeManagers}
+              prefix={<UserOutlined />}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card hoverable>
+            <Statistic
+              title="Suspended Managers"
+              value={suspendedManagers}
+              prefix={<SolutionOutlined />}
+              valueStyle={{ color: "#faad14" }}
+            />
+          </Card>
+        </Col>
+      </Row>
 
-      <div className="mb-5 space-x-4">
-        <Radio.Group
-          onChange={(e) => setSelectedRole(e.target.value)}
-          value={selectedRole}
-        >
-          <Radio.Button value="all">All Roles</Radio.Button>
-          <Radio.Button value="manager">Manager</Radio.Button>
-          <Radio.Button value="admin">Admin</Radio.Button>
-        </Radio.Group>
+      <Divider />
 
-        <Select
-          style={{ width: 200 }}
-          placeholder="Select Province"
-          onChange={(value) => setSelectedProvince(value)}
-          value={selectedProvince}
-        >
-          {getUniqueValues("province").map((province) => (
-            <Option key={province} value={province}>
-              {province}
-            </Option>
-          ))}
-        </Select>
+      <Card>
+        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Title level={4}>Manager List</Title>
+            </Col>
+            <Col>
+              <Button 
+                type="primary" 
+                icon={<UserAddOutlined />} 
+                onClick={() => handleModalOpen()}
+                style={{ backgroundColor: "#0C6C41", borderColor: "#0C6C41" }}
+              >
+                Add Manager
+              </Button>
+            </Col>
+          </Row>
 
-        <Select
-          style={{ width: 200 }}
-          placeholder="Select District"
-          onChange={(value) => setSelectedDistrict(value)}
-          value={selectedDistrict}
-        >
-          {getUniqueValues("district").map((district) => (
-            <Option key={district} value={district}>
-              {district}
-            </Option>
-          ))}
-        </Select>
+          <Row gutter={[16, 16]} align="middle">
+            <Col xs={24} sm={12} md={8} lg={6}>
+              <Search
+                placeholder="Search by name, email, or ID"
+                onSearch={(value) => setSearchKey(value)}
+                style={{ width: "100%" }}
+                enterButton={<SearchOutlined />}
+              />
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6}>
+              <Radio.Group
+                onChange={(e) => setSelectedRole(e.target.value)}
+                value={selectedRole}
+                buttonStyle="solid"
+                style={{ width: "100%" }}
+              >
+                <Radio.Button value="all" style={{ width: "33.33%" }}>All</Radio.Button>
+                <Radio.Button value="manager" style={{ width: "33.33%" }}>Manager</Radio.Button>
+                <Radio.Button value="admin" style={{ width: "33.33%" }}>Admin</Radio.Button>
+              </Radio.Group>
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6}>
+              <Select
+                style={{ width: "100%" }}
+                placeholder="Select Province"
+                onChange={(value) => setSelectedProvince(value)}
+                value={selectedProvince}
+              >
+                {getUniqueValues("province").map((province) => (
+                  <Option key={province} value={province}>
+                    {province}
+                  </Option>
+                ))}
+              </Select>
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6}>
+              <Select
+                style={{ width: "100%" }}
+                placeholder="Select District"
+                onChange={(value) => setSelectedDistrict(value)}
+                value={selectedDistrict}
+              >
+                {getUniqueValues("district").map((district) => (
+                  <Option key={district} value={district}>
+                    {district}
+                  </Option>
+                ))}
+              </Select>
+            </Col>
+          </Row>
 
-      </div>
-
-      <Table
-        columns={columns}
-        dataSource={filteredManagerList}
-        rowKey="_id"
-        loading={isLoading}
-      />
+          <Table
+            columns={columns}
+            dataSource={filteredManagerList}
+            rowKey="_id"
+            loading={isLoading}
+            pagination={{ 
+              pageSize: 10,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
+            }}
+          />
+        </Space>
+      </Card>
+    </div>
 
       <Modal
         title={editingManager ? "Edit Manager" : "Add Manager"}
@@ -508,7 +607,7 @@ const ManagerManagement = () => {
           <img alt="example" style={{ width: "100%" }} src={previewImage} />
         </Modal>
       </Modal>
-    </div>
+     </ Layout>    
   );
 };
 
