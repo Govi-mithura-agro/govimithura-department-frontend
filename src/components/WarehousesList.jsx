@@ -16,14 +16,12 @@ const WarehousesList = () => {
   const [district, setDistrict] = useState("");
   const [phone, setPhone] = useState("");
   const [capacity, setCapacity] = useState("");
-  
   const [uopen, usetOpen] = useState(false);
   const [uloading, usetLoading] = useState(false);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState(null);
-
   const [filteredWarehouses, setFilteredWarehouses] = useState([]);
-  const [filterProvince, setFilterProvince] = useState("");
-  const [filterDistrict, setFilterDistrict] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [districtOptions, setDistrictOptions] = useState([]);
   
   const showLoading = () => {
     setOpen(true);
@@ -47,20 +45,79 @@ const WarehousesList = () => {
   };
 
 
-  const fetchData = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/warehouses/getallwarehouse");
-      setWarehouses(response.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  
+  
+ // Mapping of provinces to their respective districts
+ const provinceDistrictMap = {
+  "North Central": ["Anuradhapura", "Polonnaruwa"],
+  "NorthWestern": ["Kurunegala", "Puttalam"],
+  "North sss": ["Kssssurunegala", "Pssssuttalam"],
+  "Central": ["Kalutara", "Pssssuttalam"],
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+};
 
-  const onSearch = (value) => console.log(value);
+const provinces = Object.keys(provinceDistrictMap);
+
+const fetchData = async () => {
+  try {
+    const response = await axios.get("http://localhost:5000/api/warehouses/getallwarehouse");
+    setWarehouses(response.data);
+    setFilteredWarehouses(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+useEffect(() => {
+  fetchData();
+}, []);
+
+const handleProvinceChange = (province) => {
+  setProvince(province);
+  setDistrict(""); // Reset district on province change
+  setDistrictOptions(provinceDistrictMap[province] || []); // Update district options
+  handleFilter(province, ""); // Use empty string for district
+};
+
+
+const handleDistrictChange = (district) => {
+  setDistrict(district); // Set district instead of province
+  handleFilter(province, district); // Use current province and selected district
+};
+
+
+const handleFilter = (province, district) => {
+  let filtered = warehouses;
+
+  if (province) {
+    filtered = filtered.filter((warehouse) => warehouse.province === province);
+  }
+
+  if (district) {
+    filtered = filtered.filter((warehouse) => warehouse.district === district);
+  }
+
+  if (searchTerm) {
+    filtered = filtered.filter((warehouse) =>
+      warehouse.warehouseName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  setFilteredWarehouses(filtered);
+};
+
+
+
+
+ // Search filter logic
+ const onSearch = (value) => {
+  setSearchTerm(value);
+  const filtered = warehouses.filter(warehouse =>
+    warehouse.warehouseName.toLowerCase().includes(value.toLowerCase())
+  );
+  setFilteredWarehouses(filtered);  // Update filtered data
+};
+
 
   const addWarehouse = async (event) => {
     event.preventDefault();
@@ -148,35 +205,53 @@ const deletewarehouse = async (id) => {
   }
 };
 
-  
+const provinceMenu = (
+  <Menu onClick={({ key }) => handleProvinceChange(key)}>
+    <Menu.Item key="">All Provinces</Menu.Item>
+    {Object.keys(provinceDistrictMap).map(prov => (
+      <Menu.Item key={prov}>{prov}</Menu.Item>
+    ))}
+  </Menu>
+);
 
-  const columns = [
-    {
-      title: <div className="text-left">Name</div>,
-      dataIndex: 'warehouseName',
-      key: 'name',
-      render: (text) => <button>{text}</button>,
-    },
-    {
-      title: <div className="text-left">Province</div>,
-      dataIndex: 'province',
-      key: 'province',
-    },
-    {
-      title: <div className="text-left">District</div>,
-      dataIndex: 'district',
-      key: 'district',
-    },
-    {
-      title: <div className="text-left">Phone</div>,
-      key: 'phone',
-      dataIndex: 'phone',
-    },
-    {
-      title: <div className="text-left">Capacity</div>,
-      key: 'capacity',
-      dataIndex: 'capacity',
-    },
+const districtMenu = (
+  <Menu onClick={({ key }) => handleDistrictChange(key)}>
+    <Menu.Item key="">All Districts</Menu.Item>
+    {districtOptions.map(dist => (
+      <Menu.Item key={dist}>{dist}</Menu.Item>
+    ))}
+  </Menu>
+);
+
+
+
+const columns = [
+  {
+    title: <div className="text-left">Name</div>,
+    dataIndex: 'warehouseName',
+    key: 'name',
+    render: (text) => <button>{text}</button>,
+  },
+  {
+    title: <div className="text-left">Province</div>,
+    dataIndex: 'province',
+    key: 'province',
+  },
+  {
+    title: <div className="text-left">District</div>,
+    dataIndex: 'district',
+    key: 'district',
+  },
+  {
+    title: <div className="text-left">Phone</div>,
+    key: 'phone',
+    dataIndex: 'phone',
+  },
+  {
+    title: <div className="text-left">Capacity</div>,
+    key: 'capacity',
+    dataIndex: 'capacity',
+  },
     {
       title: <div className="text-center">Action</div>,
       key: 'action',
@@ -231,71 +306,8 @@ const deletewarehouse = async (id) => {
   </Popconfirm>
 
 
-const provinceToDistricts = {
-  "North Central": ["Anuradhapura", "Polonnaruwa"],
-  "NorthWestern": ["Kurunegala", "Puttalam"],
-  "Eastern": ["Ampara", "Batticaloa", "Trincomalee"],
-  "Central": ["Kandy", "Matale", "Nuwara Eliya"],
-  "Uva": ["Badulla", "Monaragala"],
-  "Sabaragamuwa": ["Kegalle", "Ratnapura"],
-  "Southern": ["Galle", "Hambantota", "Matara"]
-};
 
-// Filter Warehouses
-const filterWarehouses = (province, district) => {
-  let filtered = warehouses;
 
-  if (province) {
-    filtered = filtered.filter((warehouse) => warehouse.province === province);
-  }
-
-  if (district) {
-    filtered = filtered.filter((warehouse) => warehouse.district === district);
-  }
-
-  setFilteredWarehouses(filtered);
-};
-
-// Handle province filter change
-const handleProvinceFilterChange = (province) => {
-  setFilterProvince(province);
-  setFilterDistrict(""); // Reset district when province changes
-  filterWarehouses(province, "");
-};
-
-// Handle district filter change
-const handleDistrictFilterChange = (district) => {
-  setFilterDistrict(district);
-  filterWarehouses(filterProvince, district);
-};
-
-const provinces = Object.keys(provinceToDistricts);
-
-const provinceMenu = (
-  <Menu>
-    <Menu.Item key="all" onClick={() => handleProvinceFilterChange("")}>
-      <a href="#">All Provinces</a>
-    </Menu.Item>
-    {provinces.map((province) => (
-      <Menu.Item key={province} onClick={() => handleProvinceFilterChange(province)}>
-        <a href="#">{province}</a>
-      </Menu.Item>
-    ))}
-  </Menu>
-);
-
-const districtMenu = (
-  <Menu>
-    <Menu.Item key="all" onClick={() => handleDistrictFilterChange("")}>
-      <a href="#">All Districts</a>
-    </Menu.Item>
-    {(provinceToDistricts[filterProvince] || []).map((district) => (
-      <Menu.Item key={district} onClick={() => handleDistrictFilterChange(district)}>
-        <a href="#">{district}</a>
-      </Menu.Item>
-    ))}
-  </Menu>
-);
 
   return (
     <>
@@ -303,24 +315,28 @@ const districtMenu = (
 
       <div className="flex justify-between items-center h-[70px] bg-white rounded-[11px] m-[15px] px-[15px]">
         <h1 className="text-2xl font-semibold font-Poppins">All Warehouses</h1>
-        <Input
-  placeholder="Search by Name"
-  
-  prefix={<Icon icon="material-symbols:search" className="text-gray-500 text-xl" />} // Add search icon here
-  style={{ width: 200 }}
-/>
+        <Search
+          placeholder="Search by Name"
+          value={searchTerm}
+          onSearch={onSearch}  // Ant Design's Search uses onSearch for handling search
+          onChange={(e) => setSearchTerm(e.target.value)}  // Allow live update in the input field
+          prefix={<Icon icon="material-symbols:search" className="text-gray-500 text-xl" />}
+          style={{ width: 200 }}
+        />
 
 
-<Dropdown overlay={provinceMenu} trigger={['click']}>
-        <Button>
-          Province <DownOutlined />
-        </Button>
-      </Dropdown>
-      <Dropdown overlay={districtMenu} trigger={['click']}>
-        <Button>
-          District <DownOutlined />
-        </Button>
-      </Dropdown>
+
+<Dropdown overlay={provinceMenu}>
+  <Button>
+    {province || "Province"} <DownOutlined />
+  </Button>
+</Dropdown>
+<Dropdown overlay={districtMenu}>
+  <Button>
+    {district || "District"} <DownOutlined />
+  </Button>
+</Dropdown>
+
 
         <Button
           icon={<Icon icon="ic:outline-plus" className="text-white" />}
@@ -376,18 +392,18 @@ const districtMenu = (
               <option value="Anuradhapura">Anuradhapura</option>
               <option value="Colombo">Colombo</option>
               <option value="Galle">Galle</option>
-              <option value="Gampaha">	Gampaha</option>
+              <option value="Gampaha">Gampaha</option>
               <option value="Hambantota">Hambantota</option>
               <option value="Jaffna">	Jaffna</option>
-              <option value="	Kalutara">	Kalutara</option>
-              <option value="	Kandy">		Kandy</option>
-              <option value="	Kalutara">	Kalutara</option>
-              <option value="	Kegalle">	Kegalle</option>
+              <option value="	Kalutara">Kalutara</option>
+              <option value="	Kandy">Kandy</option>
+              <option value="	Kalutara">Kalutara</option>
+              <option value="	Kegalle">Kegalle</option>
               <option value="	Kilinochchi">Kilinochchi</option>
-              <option value="	Kurunegala">	Kurunegala</option>
-              <option value="	Mannar">	Mannar</option>
-              <option value="	Matale">	Matale</option>
-              <option value="	Matara">	Matara</option>
+              <option value="	Kurunegala">Kurunegala</option>
+              <option value="	Mannar">Mannar</option>
+              <option value="	Matale">Matale</option>
+              <option value="	Matara">Matara</option>
               
             </select>
             {/* Phone Number Input */}
@@ -485,18 +501,18 @@ const districtMenu = (
               <option value="Anuradhapura">Anuradhapura</option>
               <option value="Colombo">Colombo</option>
               <option value="Galle">Galle</option>
-              <option value="Gampaha">	Gampaha</option>
+              <option value="Gampaha">Gampaha</option>
               <option value="Hambantota">Hambantota</option>
               <option value="Jaffna">	Jaffna</option>
-              <option value="	Kalutara">	Kalutara</option>
-              <option value="	Kandy">		Kandy</option>
-              <option value="	Kalutara">	Kalutara</option>
-              <option value="	Kegalle">	Kegalle</option>
+              <option value="	Kalutara">Kalutara</option>
+              <option value="	Kandy">Kandy</option>
+              <option value="	Kalutara">Kalutara</option>
+              <option value="	Kegalle">Kegalle</option>
               <option value="	Kilinochchi">Kilinochchi</option>
-              <option value="	Kurunegala">	Kurunegala</option>
-              <option value="	Mannar">	Mannar</option>
-              <option value="	Matale">	Matale</option>
-              <option value="	Matara">	Matara</option>
+              <option value="	Kurunegala">Kurunegala</option>
+              <option value="	Mannar">Mannar</option>
+              <option value="	Matale">Matale</option>
+              <option value="	Matara">Matara</option>
             </select>
             <div class="mb-5 mt-4">
     <label for="number" class="block mb-2 text-sm font-medium text-gray-400 dark:gray-900">Phone number</label>
@@ -537,7 +553,7 @@ const districtMenu = (
       </Modal>
 
       </div>
-      <Table columns={columns} dataSource={warehouses} className="ml-4 mr-3" />
+      <Table columns={columns} dataSource={filteredWarehouses} className="ml-4 mr-3" />
     </>
   );
 };

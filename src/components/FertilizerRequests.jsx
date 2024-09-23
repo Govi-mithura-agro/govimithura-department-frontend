@@ -3,13 +3,14 @@ import axios from "axios";
 import { Icon } from '@iconify/react';
 import { Table, Space, Input, Button, Tag,message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons'; // Import the search icon
+import moment from 'moment';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 
 const { Search } = Input;
 
-const columns = (approve, disapprove) => [
+const columns = (approve, disapprove,mapprovince,mapdistrict) => [
   {
     title: <div className="text-center">Fertilizer Name</div>,
     dataIndex: 'fertilizerName',
@@ -17,10 +18,24 @@ const columns = (approve, disapprove) => [
     render: (text) => <a>{text}</a>,
   },
   {
+    title: <div className="text-center">Request Province</div>, // Updated column title
+    dataIndex: 'warehouseID', // This should reference warehouseID
+    key: 'warehouseID',
+    render: (warehouseID) => mapprovince[warehouseID] || 'Unknown Province', // Access province from mapprovince
+  },
+  {
+    title: <div className="text-center">Request District</div>, // Updated column title
+    dataIndex: 'warehouseID', // This should reference warehouseID
+    key: 'warehouseID',
+    render: (warehouseID) => mapdistrict[warehouseID] || 'Unknown Province', // Access province from mapprovince
+  },
+  {
     title: <div className="text-center">Request Date</div>,
     dataIndex: 'requestDate',
     key: 'requestDate',
+    render: (date) => moment(date).format('DD-MM-YYYY'),
   },
+  
   {
     title: <div className="text-center">Wanted Date</div>,
     dataIndex: 'wantedDate',
@@ -108,12 +123,33 @@ const columns = (approve, disapprove) => [
 function FertilizerRequests() {
   const [fertilizerRequests, setFertilizerRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
+  const [mapprovince, setmapprovince] = useState([]);
+  const [mapdistrict, setmapdistrict] = useState([]);
 
   const fetchData = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/fertilizers/getallFertilizerRequest");
       setFertilizerRequests(response.data);
       setFilteredRequests(response.data); // Initialize filteredRequests with all data
+      await fetchUsers();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const wareHouseData = await axios.get("http://localhost:5000/api/warehouses/getallwarehouse");
+      const Province = wareHouseData.data.reduce((acc, provi) => {
+        acc[provi._id] = provi.province; // Map userid to user's name
+        return acc;
+      }, {});
+      setmapprovince(Province);
+      const District = wareHouseData.data.reduce((acc, dris) => {
+        acc[dris._id] = dris.district; // Map userid to user's name
+        return acc;
+      }, {});
+      setmapdistrict(District);
     } catch (error) {
       console.log(error);
     }
@@ -122,6 +158,8 @@ function FertilizerRequests() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  
 
   async function approve(requestid) {
     try {
@@ -235,7 +273,7 @@ function FertilizerRequests() {
       </div>
 
       <Table 
-        columns={columns(approve, disapprove)} 
+        columns={columns(approve, disapprove,mapprovince,mapdistrict)} 
         dataSource={filteredRequests} 
         rowKey="_id" 
         className="ml-4 mr-3" 
