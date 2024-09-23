@@ -277,19 +277,19 @@ useEffect(() => {
    
       {/* Existing sections */}
       <div className='ml-6'>
-      <div className="w-[266px] h-[138px] mt-4 ml-4 pl-5 pr-3 py-3 bg-[#379237]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+      <div className="w-[255px] h-[138px] mt-4 ml-4 pl-5 pr-3 py-3 bg-[#379237]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
         <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">All Users</div>
         <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{farmersCount+managersCount}</div>
       </div>
-      <div className="w-[266px] h-[138px] mt-5 ml-10 pl-5 pr-3 py-3 bg-[#54b435]/40 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+      <div className="w-[255px] h-[138px] mt-5 ml-10 pl-5 pr-3 py-3 bg-[#54b435]/40 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
         <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">Farmers</div>
         <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{farmersCount}</div>
       </div>
-      <div className="w-[266px] h-[138px] mt-5 ml-10 pl-5 pr-3 py-3 bg-[#82cd47]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+      <div className="w-[255px] h-[138px] mt-5 ml-10 pl-5 pr-3 py-3 bg-[#82cd47]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
         <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">Warehouses</div>
         <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{warehouseCount}</div>
       </div>
-      <div className="w-[266px] h-[138px] mt-5 ml-10 pl-5 pr-3 py-3 bg-[#f0ff42]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
+      <div className="w-[255px] h-[138px] mt-5 ml-10 pl-5 pr-3 py-3 bg-[#f0ff42]/50 rounded-[11px] border flex-col justify-center items-center gap-4 inline-flex">
         <div className="self-stretch text-black text-lg font-medium font-['Poppins'] leading-7">Managers</div>
         <div className="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-7">{managersCount}</div>
       </div>
