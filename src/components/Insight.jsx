@@ -1,147 +1,127 @@
-import React, { useEffect, useState,useRef } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
-import { Icon } from '@iconify/react';
+import React, { useEffect, useState } from "react";
+import { Space, Table, Modal, Input, Button, Menu, Dropdown, message, Tag } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import Insightfertilizerbarchart from "./Insightfertilizerbarchart"
 import { Doughnut } from "react-chartjs-2";
-import { Space, Table, Modal, Input, Button,Menu,Dropdown,message,Tag } from 'antd';
-import { DownOutlined  } from '@ant-design/icons';
-import Chart from "chart.js/auto";
+import Errorimage from "../images/404_error.png"
+import Search from "../images/search.png"
 
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-} from 'chart.js';
-
-ChartJS.register(
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
-
-const pieChartData = {
-  labels: ['Label 1', 'Label 2', 'Label 3'],
-  datasets: [
-    {
-      label: "Packages",
-      data: [10, 20, 30],
-      backgroundColor: [
-        "#82cd47",
-        "#379237",
-        "#f0ff42",
-      ],
-      borderWidth: 1,
-    },
-  ],
-};
-
-const options = {
-  plugins: {
-    legend: {
-      display: false,
-    },
-  },
-};
-
-
-function Warehousebarchart({ chartWidth = 800, chartHeight = 500 }) {
-  const chartRef = useRef(null);
-  const canvasRef = useRef(null);
-
-  const labels = ['Warehouse', 'Warehouse', 'Warehouse', 'Warehouse', 'Warehouse', 'Warehouse', 'Warehouse'];
-  const data = [
-    { day: 'Warehouse', count: 5 },
-    { day: 'Warehouse', count: 10 },
-    { day: 'Warehouse', count: 15 },
-    { day: 'Warehouse', count: 20 },
-    { day: 'Warehouse', count: 25 },
-    { day: 'Warehouse', count: 30 },
-    { day: 'Warehouse', count: 35 },
-  ];
-
-  const createChart = (labels, data) => {
-    const ctx = canvasRef.current.getContext("2d");
-    if (chartRef.current) {
-      chartRef.current.destroy(); // Destroy previous chart instance
-    }
-    chartRef.current = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            data: data.map((item) => item.count),
-            backgroundColor: " #7ec75b",
-            borderColor: "#7ec75b",
-            borderRadius: 10,
-            borderWidth: 1,
-          },
-        ],
-      },
-      options: {
-        maintainAspectRatio: false, // Allow custom size by disabling aspect ratio
-        scales: {
-          x: {
-            display: true,
-            ticks: {
-              color: "#4A4A4A", // Customize the color of the labels
-              font: {
-                family: "Arial", // Customize font family
-                size: 14, // Customize font size
-              },
-            },
-          },
-          y: {
-            beginAtZero: true,
-            ticks: {
-              color: "#4A4A4A",
-              font: {
-                family: "Arial",
-                size: 14,
-              },
-            },
-          },
-        },
-        plugins: {
-          legend: {
-            display: false, // Hide legend
-          },
-          tooltip: {
-            enabled: true, // Enable tooltips
-            backgroundColor: "#556b4b",
-            titleFont: { size: 14 },
-            bodyFont: { size: 12 },
-          },
-        },
-      },
-    });
-  };
+function Insight() {
+  const [warehouses, setWarehouses] = useState([]);
+  const [warehousesDistrict, setwarehousesDistrict] = useState([]);
+  const [filterProvince, setFilterProvince] = useState("");
+  const [filterDistrict, setFilterDistrict] = useState("");
+  const [selectedWarehouseID, setSelectedWarehouseId] = useState("");
+  const [isFiltered, setIsFiltered] = useState(false);
+  const [warehouseDistrict, setwarehouseDistrict] = useState("");
+  const [fertilizers, setFertilizers] = useState([]);
+  const [farmersStatusCount, setFarmersStatusCount] = useState({ active: 0, unverified: 0 });
 
   useEffect(() => {
-    createChart(labels, data);
-  }, [labels, data]);
+    const fetchWarehouses = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/warehouses/getallwarehouse');
+        setWarehouses(response.data);
+        setwarehousesDistrict(response.data);
+      } catch (error) {
+        console.error("Error fetching warehouses:", error);
+      }
+    };
+    fetchWarehouses();
+  }, []);
 
-  return (
-    <div
-      className="daily-login-count-chart-container flex justify-center"
-      style={{ width: '564px', height: '264px' }} // Use style to pass custom width/height
-    >
-      <canvas
-        ref={canvasRef}
-        id="LoginCountChart"
-        width={chartWidth} // Set width attribute
-        height={chartHeight} // Set height attribute
-      ></canvas>
-    </div>
+  useEffect(() => {
+    const fetchFarmersVerificationData = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/farmers/getAllFarmers');
+        const farmers = response.data;
+        const activeCount = farmers.filter(farmer => farmer.status === "Verified").length;
+        const unverifiedCount = farmers.filter(farmer => farmer.status === "Unverified").length;
+        setFarmersStatusCount({ active: activeCount, unverified: unverifiedCount });
+      } catch (error) {
+        console.error('Error fetching farmer verification data:', error);
+      }
+    };
+    fetchFarmersVerificationData();
+  }, []);
+
+  useEffect(() => {
+    if (selectedWarehouseID && selectedWarehouseID !== "No warehouses found for the selected filters.") {
+      fetchData();
+    }
+  }, [selectedWarehouseID]);
+
+  const filterWarehouses = () => {
+    let filtered = warehouses;
+    let filtereddistrict = warehousesDistrict;
+    if (filterProvince) {
+      filtered = filtered.filter(warehouse => warehouse.province === filterProvince);
+    }
+    if (filterDistrict) {
+      filtered = filtered.filter(warehouse => warehouse.district === filterDistrict);
+      filtereddistrict = filtered.filter(warehousesDistrict => warehousesDistrict.district === filterDistrict);
+    }
+    if (filtered.length > 0) {
+      setSelectedWarehouseId(filtered[0]._id);
+      setwarehouseDistrict(filtereddistrict[0].district);
+    } else {
+      setSelectedWarehouseId("No warehouses found for the selected filters.");
+    }
+    setIsFiltered(true);
+  };
+
+  const handleProvinceFilterChange = (province) => {
+    setFilterProvince(province);
+    setFilterDistrict("");
+    setIsFiltered(false);
+  };
+
+  const handleDistrictFilterChange = (district) => {
+    setFilterDistrict(district);
+    setIsFiltered(false);
+  };
+
+  const provinceToDistricts = {
+    "North Central": ["Anuradhapura", "Polonnaruwa"],
+    "North Western": ["Kurunegala", "Puttalam"],
+    "North sss": ["Kssssurunegala", "Pssssuttalam"],
+    "Central": ["Kalutara", "Pssssuttalam"],
+    "North sss": ["Kssssurunegala", "Pssssuttalam"],
+    "North sss": ["Kssssurunegala", "Pssssuttalam"],
+    "North sss": ["Kssssurunegala", "Pssssuttalam"],
+    // Add other provinces and districts here
+  };
+
+  const provinces = Object.keys(provinceToDistricts);
+
+  const provinceMenu = (
+    <Menu>
+      <Menu.Item key="all" onClick={() => handleProvinceFilterChange("")}>
+        <a href="#">All Provinces</a>
+      </Menu.Item>
+      {provinces.map(province => (
+        <Menu.Item key={province} onClick={() => handleProvinceFilterChange(province)}>
+          <a href="#">{province}</a>
+        </Menu.Item>
+      ))}
+    </Menu>
   );
-}
 
+  const districtMenu = (
+    <Menu>
+      <Menu.Item key="all" onClick={() => handleDistrictFilterChange("")}>
+        <a href="#">All Districts</a>
+      </Menu.Item>
+      {(provinceToDistricts[filterProvince] || []).map(district => (
+        <Menu.Item key={district} onClick={() => handleDistrictFilterChange(district)}>
+          <a href="#">{district}</a>
+        </Menu.Item>
+      ))}
+    </Menu>
+  );
 
-
-const columns = [
+  const columns = [
     {
       title: "Fertilizer",
       dataIndex: "fertilizer",
@@ -189,196 +169,142 @@ const columns = [
         );
       },
     },
-    
   ];
 
-  const data = [
-    {
-      key: '1',
-      fertilizer: 'Type 1',
-      lastUpdated: '2024-09-12',
-      amount: '2000',
-      status: 'available',
-     
+  const fetchData = async () => {
+    try {
+      const response = await axios.post("http://localhost:5000/api/fertilizers/getFertilizerRelaventWarehouseId", {
+        warehouseid: selectedWarehouseID,
+      });
+      const formattedFertilizers = response.data.map((fertilizer) => ({
+        key: fertilizer._id,
+        fertilizer: fertilizer.fertilizerName,
+        lastUpdated: fertilizer.date,
+        amount: fertilizer.quantity,
+        status: fertilizer.quantity === 0 ? 'out of stock' : fertilizer.quantity < 100 ? 'low stock' : 'In stock',
+        _id: fertilizer._id,
+      }));
+      setFertilizers(formattedFertilizers);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const pieChartData = {
+    labels: ['Verified', 'Unverified'],
+    datasets: [
+      {
+        label: "Farmers",
+        data: [farmersStatusCount.active, farmersStatusCount.unverified],
+        backgroundColor: [
+          "#82cd47",
+          "#f0ff42",
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const options = {
+    plugins: {
+      legend: {
+        display: false,
+      },
     },
-    {
-      key: '2',
-      fertilizer: 'Type 1',
-      lastUpdated: '2024-09-12',
-      amount: '2000',
-      status: 'out of stock',
-    },
-   { key: '3',
-      fertilizer: 'Type 1',
-      lastUpdated: '2024-09-12',
-      amount: '2000',
-      status: 'low stock',}
-  ];
-
-
-function Insight() {
-
-  
-  const [warehouses, setWarehouses] = useState([]);
-
-  const [filteredWarehouses, setFilteredWarehouses] = useState([]);
-  const [filterProvince, setFilterProvince] = useState("");
-  const [filterDistrict, setFilterDistrict] = useState("");
-
-
-// Filter Warehouses
-const filterWarehouses = (province, district) => {
-  let filtered = warehouses;
-
-  if (province) {
-    filtered = filtered.filter((warehouse) => warehouse.province === province);
-  }
-
-  if (district) {
-    filtered = filtered.filter((warehouse) => warehouse.district === district);
-  }
-
-  setFilteredWarehouses(filtered);
-};
-
-// Handle province filter change
-const handleProvinceFilterChange = (province) => {
-  setFilterProvince(province);
-  setFilterDistrict(""); // Reset district when province changes
-  filterWarehouses(province, "");
-};
-
-// Handle district filter change
-const handleDistrictFilterChange = (district) => {
-  setFilterDistrict(district);
-  filterWarehouses(filterProvince, district);
-};
-
-const provinceToDistricts = {
-  "North Central": ["Anuradhapura", "Polonnaruwa"],
-  "NorthWestern": ["Kurunegala", "Puttalam"],
-  "Eastern": ["Ampara", "Batticaloa", "Trincomalee"],
-  "Central": ["Kandy", "Matale", "Nuwara Eliya"],
-  "Uva": ["Badulla", "Monaragala"],
-  "Sabaragamuwa": ["Kegalle", "Ratnapura"],
-  "Southern": ["Galle", "Hambantota", "Matara"]
-};
-
-const provinces = Object.keys(provinceToDistricts);
-
-
-  const provinceMenu = (
-  <Menu>
-    <Menu.Item key="all" onClick={() => handleProvinceFilterChange("")}>
-      <a href="#">All Provinces</a>
-    </Menu.Item>
-    {provinces.map((province) => (
-      <Menu.Item key={province} onClick={() => handleProvinceFilterChange(province)}>
-        <a href="#">{province}</a>
-      </Menu.Item>
-    ))}
-  </Menu>
-);
-
-const districtMenu = (
-  <Menu>
-    <Menu.Item key="all" onClick={() => handleDistrictFilterChange("")}>
-      <a href="#">All Districts</a>
-    </Menu.Item>
-    {(provinceToDistricts[filterProvince] || []).map((district) => (
-      <Menu.Item key={district} onClick={() => handleDistrictFilterChange(district)}>
-        <a href="#">{district}</a>
-      </Menu.Item>
-    ))}
-  </Menu>
-);
-
+  };
 
   return (
-    <>
-      <div className="flex justify-between items-center h-[70px] bg-white rounded-[11px] m-[15px] px-[15px]">
-      <Dropdown overlay={provinceMenu} trigger={['click']} className="w-32">
-        <Button>
-          Province <DownOutlined />
-        </Button>
-      </Dropdown>
-     
-
-      <Dropdown overlay={provinceMenu} trigger={['click']}>
-        <Button>
-          Province <DownOutlined />
-        </Button>
-      </Dropdown>
-      <Dropdown overlay={districtMenu} trigger={['click']}>
-        <Button>
-          District <DownOutlined />
-        </Button>
-      </Dropdown>
-
-        <Button
-         
-          className="bg-green-700 text-white w-32"
-          size="large"
-         
-        >
-          Filter
-        </Button>
+    <div className="p-4">
+      <form className="mb-4">
+        <div className="flex justify-between items-center bg-white rounded-lg p-4">
+          <Dropdown overlay={provinceMenu} trigger={['click']}>
+            <Button>
+              {filterProvince || "Province"} <DownOutlined />
+            </Button>
+          </Dropdown>
+          <Dropdown overlay={districtMenu} trigger={['click']}>
+            <Button>
+              {filterDistrict || "District"} <DownOutlined />
+            </Button>
+          </Dropdown>
+          <Button
+            className="bg-green-700 text-white"
+            onClick={filterWarehouses}
+          >
+            Filter
+          </Button>
         </div>
-
-
-        <div className="flex mt-8 ml-4 space-x-10 s">
-        <div className="w-[665px] h-[345px] bg-white rounded-[11px] flex flex-col ">
-          <div className="w-[272px] h-[74px] mb-4 p-4">
-            <div className="w-[200px] h-[22px] text-gray-900 text-xl font-medium font-['DM Sans'] leading-normal">
-              Fertilizers Amount
+      </form>
+      
+      {!isFiltered ? (
+        <div className="text-center mt-8 flex flex-col items-center">
+  <h2 className="text-xl font-bold text-blue-500">Filter Warehouse</h2>
+  
+  <img src={Search} alt="Error" className="w-[510px] h-auto mt-0" />
+</div>
+      ) : selectedWarehouseID && selectedWarehouseID !== "No warehouses found for the selected filters." ? (
+        <div>
+          <div className="flex mt-8 ml-4 space-x-10 s">
+            <div className="w-[645px] h-[345px] bg-white rounded-[11px] flex flex-col ">
+              <div className="w-[272px] h-[74px] mb-4 p-4">
+                <div className="w-[200px] h-[22px] text-gray-900 text-xl font-medium font-['DM Sans'] leading-normal">
+                  {warehouseDistrict}
+                </div>
+                <div className="text-[#a3aed0] text-sm font-medium font-['DM Sans'] leading-normal mt-2">
+                  Mass percentage of fertilizer
+                </div>
+                <div className="bar_chart">
+                  <Insightfertilizerbarchart warehouseId={selectedWarehouseID}/>       
+                </div>
+              </div>
             </div>
-           
-            <div className="text-[#a3aed0] text-sm font-medium font-['DM Sans'] leading-normal mt-2">
-              Visitors per day
-            </div>
-            <div className="bar_chart">
-                      <Warehousebarchart/>
-                    </div>
-          </div>
-        </div>
 
-        <div className="w-[525px] h-[345px] bg-white rounded-[11px] flex flex-col ">
-          <div className="w-[262px] h-[74px] mb-4 p-4">
-            <div className="booking_dashboard_doughnut_container ">
-              <h4>Login Catagoury</h4>
-              <p className='text-gray-400'>popular Categories among users </p>
-              <div className="booking_dashboard_doughnut flex mt-10 ml-10">
-                <Doughnut data={pieChartData} options={options} />
-                <div className="flex flex-col ml-8 mt-10">
-                  {pieChartData.labels.map((label, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <div
-                        className="legend-color"
-                        style={{
-                          backgroundColor:
-                            pieChartData.datasets[0].backgroundColor[index],
-                          width: '20px',
-                          height: '20px',
-                          borderRadius: '50%',
-                          marginRight: '8px',
-                        }}
-                      ></div>
-                      <div className="legend-label">User</div>
+            <div className="w-[545px] h-[345px] bg-white rounded-[11px] flex flex-col ">
+              <div className="w-[262px] h-[74px] mb-4 p-4">
+                <div className="booking_dashboard_doughnut_container ">
+                  <h4>Farmer verification</h4>
+                  <p className='text-gray-400'>All verification farmers summary </p>
+                  <div className="booking_dashboard_doughnut flex mt-10 ml-10">
+                    <Doughnut data={pieChartData} options={options} />
+                    <div className="flex flex-col ml-6 mt-10">
+                      {['Verified', 'Unverified'].map((label, index) => (
+                        <div key={index} className="flex items-center mb-2">
+                          <div
+                            className="legend-color mt-6"
+                            style={{
+                              backgroundColor: ['#82cd47', '#f0ff42'][index],
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              marginRight: '8px',
+                            }}
+                          ></div>
+                          <div className="w-32 mt-5">
+                            {label}: {index === 0 ? farmersStatusCount.active : farmersStatusCount.unverified}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          <div className="items-center rounded-[11px] m-[15px] px-[2] mt-6">
+            <Table columns={columns} dataSource={fertilizers} pagination={false} />
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="text-center mt-8 flex flex-col items-center">
+  <h2 className="text-xl font-bold text-red-500">Warehouse not found</h2>
+  <p className="text-gray-600 mt-2">No relevant warehouse data available for the selected filters.</p>
+  <img src={Errorimage} alt="Error" className="w-[640px] h-auto mt-0" />
+</div>
 
-      <div className="  items-center  rounded-[11px] m-[15px] px-[2] mt-6">
 
-      <Table columns={columns} dataSource={data} pagination={false} />
-      </div>
-    </>
-  )
+      )}
+    </div>
+  );
 }
 
-export default Insight
+export default Insight;
