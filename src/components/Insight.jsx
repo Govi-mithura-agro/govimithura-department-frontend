@@ -85,11 +85,9 @@ function Insight() {
   const provinceToDistricts = {
     "North Central": ["Anuradhapura", "Polonnaruwa"],
     "North Western": ["Kurunegala", "Puttalam"],
-    "North sss": ["Kssssurunegala", "Pssssuttalam"],
-    "Central": ["Kalutara", "Pssssuttalam"],
-    "North sss": ["Kssssurunegala", "Pssssuttalam"],
-    "North sss": ["Kssssurunegala", "Pssssuttalam"],
-    "North sss": ["Kssssurunegala", "Pssssuttalam"],
+    "Central": ["Kalutara", "Kagalla"],
+    "North": ["Jafna", "Wawniya"],
+    
     // Add other provinces and districts here
   };
 
